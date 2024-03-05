@@ -1,5 +1,5 @@
 [gerrit]
 host=gerrit.opensdn.io
 port=29418
-project=tungstenfabric/tf-common.git
+project=opensdn-io/tf-common.git
 defaultbranch=master
