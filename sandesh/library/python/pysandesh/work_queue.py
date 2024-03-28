@@ -233,7 +233,7 @@ class WorkQueue(object):
         hwm_index = index - 1
         if hwm_index == self._hwm_index:
             return
-        self._set_watermark_indices(hwm_index, hwm_index+1)
+        self._set_watermark_indices(hwm_index, hwm_index + 1)
         # Now invoke the watermark callback
         self._high_watermarks[self._hwm_index].callback(self._qsize)
     # end _process_high_watermarks
@@ -253,7 +253,7 @@ class WorkQueue(object):
         lwm_index = index
         if lwm_index == self._lwm_index:
             return
-        self._set_watermark_indices(lwm_index-1, lwm_index)
+        self._set_watermark_indices(lwm_index - 1, lwm_index)
         # Now invoke the watermark callback
         self._low_watermarks[self._lwm_index].callback(self._qsize)
     # end _process_low_watermarks

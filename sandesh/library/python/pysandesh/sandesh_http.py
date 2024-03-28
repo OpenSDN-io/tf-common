@@ -6,7 +6,9 @@
 # Sandesh Http
 #
 
-from __future__ import absolute_import
+import gevent.monkey
+gevent.monkey.patch_all()
+
 
 import importlib
 import pkgutil
@@ -19,7 +21,6 @@ import bottle
 
 from future import standard_library
 
-from gevent import monkey
 from gevent import ssl
 from gevent.pywsgi import WSGIServer
 from gevent.server import StreamServer
@@ -39,7 +40,6 @@ standard_library.install_aliases()
 #
 if 'threading' in sys.modules:
     del sys.modules['threading']
-monkey.patch_all()
 if six.PY2:
     from StringIO import StringIO
 else:
