@@ -167,7 +167,6 @@ def code_coverage(target, source, env):
     os.system('lcov --base-directory . --directory ' + Dir('.').path +
               ' --zerocounters -q')
     # execute tests
-    import subprocess
     ShEnv = {env['ENV_SHLIB_PATH']: 'build/lib'}
 
     for test in test_suite_cpp:

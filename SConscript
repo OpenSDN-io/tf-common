@@ -3,6 +3,7 @@
 #
 
 import platform
+import six
 import subprocess
 import sys
 
@@ -38,6 +39,7 @@ common.Append(CCFLAGS = ['-Wall', '-Werror', '-Wsign-compare'])
 gpp_version = subprocess.check_output(
     "g++ --version | grep g++ | awk '{print $3}'",
     shell=True).rstrip()
+gpp_version = six.ensure_str(gpp_version)
 gpp_version_major = int(gpp_version.split(".")[0])
 if gpp_version_major >= 8:
     # auto_ptr is depricated - dont error on deprication warnings
