@@ -6,7 +6,7 @@ from setuptools import setup
 
 setup(
     name='libpartition',
-    version='0.1dev',
+    version='0.1.dev0',
     packages=[
         'libpartition',
     ],
