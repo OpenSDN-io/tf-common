@@ -6,26 +6,27 @@ Import('CqlIfEnv')
 
 env = CqlIfEnv.Clone()
 
-def MapBuildDir(list):
-    return map(lambda x: env['TOP'] + '/' + x, list)
+def MapBuildDir(dirs):
+    return list(map(lambda x: env['TOP'] + '/' + x, dirs))
 
-env.Prepend(LIBS=[  'io',
-                    'sandesh',
-                    'http',
-                    'http_parser',
-                    'pugixml',
-                    'xml',
-                    'curl',
-                    'process_info',
-                    'io',
-                    'base',
-                    'sandeshvns',
-                    'cassandra_cql',
-                    'gendb',
-                    'cassandra',
-                    'ssl',
-                    'crypto',
-                    'gunit'])
+env.Prepend(LIBS=[
+    'io',
+    'sandesh',
+    'http',
+    'http_parser',
+    'pugixml',
+    'xml',
+    'curl',
+    'process_info',
+    'io',
+    'base',
+    'sandeshvns',
+    'cassandra_cql',
+    'gendb',
+    'cassandra',
+    'ssl',
+    'crypto',
+    'gunit'])
 
 libs = MapBuildDir([
         'xml',

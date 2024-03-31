@@ -6,8 +6,8 @@ Import('ZooEnv')
 
 env = ZooEnv.Clone()
 
-def MapBuildDir(list):
-    return map(lambda x: env['TOP'] + '/' + x, list)
+def MapBuildDir(dirs):
+    return list(map(lambda x: env['TOP'] + '/' + x, dirs))
 
 libs = ['zookeeper_client', 'base', 'zookeeper_mt', 'gunit']
 env.Prepend(LIBS=libs)

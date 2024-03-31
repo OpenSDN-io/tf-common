@@ -5,8 +5,8 @@
 Import('DbEnv')
 env = DbEnv.Clone()
 
-def MapBuildDir(list):
-    return map(lambda x: env['TOP'] + '/' + x, list)
+def MapBuildDir(dirs):
+    return list(map(lambda x: env['TOP'] + '/' + x, dirs))
 
 libs = ['gendb', 'base', 'gunit']
 env.Prepend(LIBS = libs)

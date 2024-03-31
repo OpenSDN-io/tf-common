@@ -9,8 +9,8 @@ env = EqlIfEnv.Clone()
 env.Append(CPPPATH = env['TOP'])
 env.Append(CPPPATH = [env['TOP'] + '/database'])
 
-def MapBuildDir(list):
-    return map(lambda x: env['TOP'] + '/' + x, list)
+def MapBuildDir(dirs):
+    return list(map(lambda x: env['TOP'] + '/' + x, dirs))
 
 env.Prepend(LIBS=[  'io',
                     'sandesh',
