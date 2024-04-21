@@ -263,7 +263,7 @@ public:
     }
 };
 
-typedef std::tr1::tuple<int, size_t, int, size_t> TestParams;
+typedef std::tuple<int, size_t, int, size_t> TestParams;
 class ConfigCassandraClientTest : public ::testing::TestWithParam<TestParams> {
 protected:
     ConfigCassandraClientTest() :
@@ -273,10 +273,10 @@ protected:
     }
 
     virtual void SetUp() {
-        get_row_result_ = std::tr1::get<0>(GetParam());
-        get_row_have_index_ = std::tr1::get<1>(GetParam());
-        get_multirow_result_ = std::tr1::get<2>(GetParam());
-        get_multirow_result_index_ = std::tr1::get<3>(GetParam());
+        get_row_result_ = std::get<0>(GetParam());
+        get_row_have_index_ = std::get<1>(GetParam());
+        get_multirow_result_ = std::get<2>(GetParam());
+        get_multirow_result_index_ = std::get<3>(GetParam());
         empty_fqnames_db = false;
         timestamp_ = 0;
         db_init_result_ = 2;
