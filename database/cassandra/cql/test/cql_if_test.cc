@@ -898,7 +898,8 @@ TEST_F(CqlIfTest, SelectFromTableReadFields) {
     // in filter. i.e. column1 >= "c"
     GenDb::Blob col_filter(reinterpret_cast<const uint8_t *>("d"), 1);
     GenDb::ColumnNameRange crange;
-    crange.start_ = boost::assign::list_of(GenDb::DbDataValue(col_filter));
+    crange.start_ = boost::assign::list_of(GenDb::DbDataValue(col_filter)).
+        convert_to_container<GenDb::DbDataValueVec>();
     std::string actual_qstring4(
         cass::cql::impl::PartitionKeyAndClusteringKeyRange2CassSelectFromTable(
             table, all_values, crange, key_column_values_timestamp));
@@ -1030,7 +1031,8 @@ TEST_F(CqlIfTest, SelectFromTableMultipleRead) {
     // in filter. i.e. column1 >= "c"
     GenDb::Blob col_filter(reinterpret_cast<const uint8_t *>("d"), 1);
     GenDb::ColumnNameRange crange;
-    crange.start_ = boost::assign::list_of(GenDb::DbDataValue(col_filter));
+    crange.start_ = boost::assign::list_of(GenDb::DbDataValue(col_filter)).
+        convert_to_container<GenDb::DbDataValueVec>();
     std::string actual_qstring4(
         cass::cql::impl::PartitionKeyAndClusteringKeyRange2CassSelectFromTable(
             table, keys, crange, key_column_values_timestamp));

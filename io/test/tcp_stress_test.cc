@@ -45,7 +45,7 @@ using ::testing::TestWithParam;
 using ::testing::ValuesIn;
 using ::testing::Combine;
 
-typedef std::tr1::tuple<int, int, int, bool> TestParams;
+typedef std::tuple<int, int, int, bool> TestParams;
 static char **gargv;
 static int    gargc;
 
@@ -403,10 +403,10 @@ protected:
     }
 
     void InitParams() {
-        max_num_servers_ = std::tr1::get<0>(GetParam());
-        max_num_connections_ = std::tr1::get<1>(GetParam());
-        max_packet_size_ = std::tr1::get<2>(GetParam());
-        blocking_ = std::tr1::get<3>(GetParam());
+        max_num_servers_ = std::get<0>(GetParam());
+        max_num_connections_ = std::get<1>(GetParam());
+        max_packet_size_ = std::get<2>(GetParam());
+        blocking_ = std::get<3>(GetParam());
     }
 
     bool verify_rx() {
