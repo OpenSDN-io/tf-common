@@ -263,8 +263,8 @@ public:
         evm_.reset();
         host_url_.str("");
     }
-    std::auto_ptr<ServerThread> thread_;
-    std::auto_ptr<EventManager> evm_;
+    std::unique_ptr<ServerThread> thread_;
+    std::unique_ptr<EventManager> evm_;
     ostringstream host_url_;
 
 };

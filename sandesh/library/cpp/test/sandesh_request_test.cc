@@ -212,8 +212,8 @@ class SandeshRequestTest : public ::testing::Test {
 
     static bool validate_done_;
 
-    std::auto_ptr<ServerThread> thread_;
-    std::auto_ptr<EventManager> evm_;
+    std::unique_ptr<ServerThread> thread_;
+    std::unique_ptr<EventManager> evm_;
     SandeshServerTest *server_;
 };
 

@@ -36,7 +36,7 @@
 using contrail::regex;
 using contrail::regex_match;
 using contrail::regex_search;
-using std::auto_ptr;
+using std::unique_ptr;
 using std::multimap;
 using std::set;
 using std::string;

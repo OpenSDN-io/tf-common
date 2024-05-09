@@ -17,7 +17,7 @@ TaskMonitor::TaskMonitor(TaskScheduler *scheduler,
                          uint64_t tbb_keepawake_time_msec,
                          uint64_t inactivity_time_msec,
                          uint64_t poll_interval_msec) :
-    scheduler_(scheduler), cancelled_(false), timer_impl_(NULL),
+    scheduler_(scheduler), cancelled_(false), timer_impl_(nullptr),
     inactivity_time_usec_(inactivity_time_msec * 1000),
     poll_interval_msec_(poll_interval_msec),
     tbb_keepawake_time_msec_(tbb_keepawake_time_msec),

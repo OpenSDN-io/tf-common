@@ -65,8 +65,8 @@ public:
         task_util::WaitForIdle();
     }
 
-    auto_ptr<ServerThread> thread_;
-    auto_ptr<EventManager> evm_;
+    unique_ptr<ServerThread> thread_;
+    unique_ptr<EventManager> evm_;
 };
 
 bool TimerCb() {

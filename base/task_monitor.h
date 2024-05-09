@@ -52,7 +52,7 @@ private:
     // Monitor terminated
     bool cancelled_;
     // ASIO Timer implementation class
-    std::auto_ptr<TimerImpl> timer_impl_;
+    std::unique_ptr<TimerImpl> timer_impl_;
 
     // inactivity in usec after which monitor must invoke assert()
     uint64_t inactivity_time_usec_;

@@ -69,7 +69,7 @@ bool Sandesh::slo_to_logger_ = false;
 bool Sandesh::sampled_to_logger_ = false;
 SandeshClient *Sandesh::client_ = NULL;
 SandeshConfig Sandesh::config_;
-std::auto_ptr<Sandesh::SandeshRxQueue> Sandesh::recv_queue_;
+std::unique_ptr<Sandesh::SandeshRxQueue> Sandesh::recv_queue_;
 std::string Sandesh::module_;
 std::string Sandesh::source_;
 std::string Sandesh::node_type_;

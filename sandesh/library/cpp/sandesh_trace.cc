@@ -101,7 +101,7 @@ void SandeshTraceRequest::HandleRequest() const {
         }
         return;
     }
-    std::auto_ptr<SandeshTraceRequestRunner> trace_req_runner(new
+    std::unique_ptr<SandeshTraceRequestRunner> trace_req_runner(new
             SandeshTraceRequestRunner(trace_buf, context(),
                 read_context, get_count()));
     trace_req_runner->Run();
@@ -118,7 +118,7 @@ void SandeshTraceSend(const std::string& buf_name, uint32_t trace_count) {
     if (!trace_buf) {
         return;
     }
-    std::auto_ptr<SandeshTraceRequestRunner> trace_req_runner(new
+    std::unique_ptr<SandeshTraceRequestRunner> trace_req_runner(new
             SandeshTraceRequestRunner(trace_buf, "", "Collector", trace_count));
     trace_req_runner->Run();
 }

@@ -67,7 +67,7 @@ TEST_F(ZookeeperClientTest, Basic) {
     EXPECT_CALL(*zmi, ZooSetDebugLevel(_));
     impl::ZookeeperClientImpl *cImpl(
         new impl::ZookeeperClientImpl("Test", "127.0.0.1:2181", zmi));
-    std::auto_ptr<ZookeeperClient> client(CreateClient(cImpl));
+    std::unique_ptr<ZookeeperClient> client(CreateClient(cImpl));
     std::string zk_lock_name("/test-lock");
     ZookeeperLock zk_lock(client.get(), zk_lock_name.c_str());
     std::string zk_lock_id(GetLockId(zk_lock));
@@ -94,7 +94,7 @@ TEST_F(ZookeeperClientTest, ZooStateConnecting2Connect) {
     EXPECT_CALL(*zmi, ZooSetDebugLevel(_));
     impl::ZookeeperClientImpl *cImpl(
         new impl::ZookeeperClientImpl("Test", "127.0.0.1:2181", zmi));
-    std::auto_ptr<ZookeeperClient> client(CreateClient(cImpl));
+    std::unique_ptr<ZookeeperClient> client(CreateClient(cImpl));
     std::string zk_lock_name("/test-lock");
     ZookeeperLock zk_lock(client.get(), zk_lock_name.c_str());
     std::string zk_lock_id(GetLockId(zk_lock));
@@ -126,7 +126,7 @@ TEST_F(ZookeeperClientTest, ZooCreateNodeExists) {
     EXPECT_CALL(*zmi, ZooSetDebugLevel(_));
     impl::ZookeeperClientImpl *cImpl(
         new impl::ZookeeperClientImpl("Test", "127.0.0.1:2181", zmi));
-    std::auto_ptr<ZookeeperClient> client(CreateClient(cImpl));
+    std::unique_ptr<ZookeeperClient> client(CreateClient(cImpl));
     std::string zk_lock_name("/test-lock");
     ZookeeperLock zk_lock(client.get(), zk_lock_name.c_str());
     std::string zk_lock_id(GetLockId(zk_lock));
@@ -161,7 +161,7 @@ TEST_F(ZookeeperClientTest, ZooCreateRecoverableError) {
     EXPECT_CALL(*zmi, ZooSetDebugLevel(_));
     impl::ZookeeperClientImpl *cImpl(
         new impl::ZookeeperClientImpl("Test", "127.0.0.1:2181", zmi));
-    std::auto_ptr<ZookeeperClient> client(CreateClient(cImpl));
+    std::unique_ptr<ZookeeperClient> client(CreateClient(cImpl));
     std::string zk_lock_name("/test-lock");
     ZookeeperLock zk_lock(client.get(), zk_lock_name.c_str());
     std::string zk_lock_id(GetLockId(zk_lock));
@@ -190,7 +190,7 @@ TEST_F(ZookeeperClientTest, ZooCreateUnrecoverableError) {
     EXPECT_CALL(*zmi, ZooSetDebugLevel(_));
     impl::ZookeeperClientImpl *cImpl(
         new impl::ZookeeperClientImpl("Test", "127.0.0.1:2181", zmi));
-    std::auto_ptr<ZookeeperClient> client(CreateClient(cImpl));
+    std::unique_ptr<ZookeeperClient> client(CreateClient(cImpl));
     std::string zk_lock_name("/test-lock");
     ZookeeperLock zk_lock(client.get(), zk_lock_name.c_str());
     std::string zk_lock_id(GetLockId(zk_lock));
@@ -221,7 +221,7 @@ TEST_F(ZookeeperClientTest, ZooDeleteRecoverableError) {
     EXPECT_CALL(*zmi, ZooSetDebugLevel(_));
     impl::ZookeeperClientImpl *cImpl(
         new impl::ZookeeperClientImpl("Test", "127.0.0.1:2181", zmi));
-    std::auto_ptr<ZookeeperClient> client(CreateClient(cImpl));
+    std::unique_ptr<ZookeeperClient> client(CreateClient(cImpl));
     std::string zk_lock_name("/test-lock");
     ZookeeperLock zk_lock(client.get(), zk_lock_name.c_str());
     std::string zk_lock_id(GetLockId(zk_lock));

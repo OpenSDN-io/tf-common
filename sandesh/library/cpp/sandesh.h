@@ -409,7 +409,7 @@ private:
     static std::string node_type_;
     static std::string instance_id_;
     static int http_port_;
-    static std::auto_ptr<SandeshRxQueue> recv_queue_;
+    static std::unique_ptr<SandeshRxQueue> recv_queue_;
     static int recv_task_id_;
     static SandeshContext *client_context_;
     static ModuleContextMap module_context_;
