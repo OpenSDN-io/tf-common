@@ -48,15 +48,23 @@ boost::scoped_ptr<TaskScheduler> TaskScheduler::singleton_;
         scheduler->Log(__FILE__, __LINE__, task, msg, delay);\
     } while (false)
 
-// Private class used to implement tbb::task
-// An object is created when task is ready for execution and
-// registered with tbb::task
+/// @brief A private class used to implement tbb::task
+/// An object is created when task is ready for execution and
+/// registered with tbb::task
 class TaskImpl : public tbb::task {
 public:
     TaskImpl(Task *t) : parent_(t) {};
+ 
+    /// @brief Destructor is called when a task execution is compeleted.
+    /// Invoked implicitly by tbb::task.
+    /// Invokes OnTaskExit to schedule tasks pending tasks
     virtual ~TaskImpl();
 
 private:
+
+    /// @brief Method called from tbb::task to execute.
+    /// Invoke Run() method of client.
+    /// Supports task continuation when Run() returns false
     tbb::task *execute();
 
     Task    *parent_;
@@ -64,28 +72,33 @@ private:
     DISALLOW_COPY_AND_ASSIGN(TaskImpl);
 };
 
-// Information maintained for every <task, instance>
-// policyq_  : contains,
-//      - Policies configured for a task
-//      - Complementary policies for a task.
-//          Example, if a policy is of form <tid0> => <tid1, inst1> <tid2, -1>
-//          <tid1, inst1> cannot run if <tid0, inst1> is running
-//          <tid2, *> cannot run when <tid0, *> are running. These become
-//          complementary rule
-// waitq_   : Tasks of this instance created and waiting to be executed. Tasks
-//            are stored and executed in order of their creation
-//            Task can be added here on Enqueue if policy conditions are not
-//            met. Its taken out from waitq_ only when its about to Run
-// deferq_  : Tree of TaskEntry waiting on this task instance. The TaskEntry.
-//            This tree is populated if all conditions are met
-//            - This TaskEntry has tasks created
-//            - The TaskEntry in deferq_ has tasks created
-//            - The Tree is sorted on task seqno_
-// run_task_ : Task running in context of this TaskEntry. Only entries in
-//            task_entry_db_ have this set. Entries in task_db_ will always
-//            have this as NULL
-//            Running task is not in waitq_ or deferq_
-// run_count_: Number of running tasks for this TaskEntry
+/// @brief A class maintaning information for every <task, instance>
+///
+/// policyq_  : contains,
+///      - Policies configured for a task
+///      - Complementary policies for a task.
+///          Example, if a policy is of form <tid0> => <tid1, inst1> <tid2, -1>
+///          <tid1, inst1> cannot run if <tid0, inst1> is running
+///          <tid2, *> cannot run when <tid0, *> are running. These become
+///          complementary rule
+///
+/// waitq_   : Tasks of this instance created and waiting to be executed. Tasks
+///            are stored and executed in order of their creation
+///            Task can be added here on Enqueue if policy conditions are not
+///            met. Its taken out from waitq_ only when its about to Run
+///
+/// deferq_  : Tree of TaskEntry waiting on this task instance. The TaskEntry.
+///            This tree is populated if all conditions are met
+///            - This TaskEntry has tasks created
+///            - The TaskEntry in deferq_ has tasks created
+///            - The Tree is sorted on task seqno_
+///
+/// run_task_ : Task running in context of this TaskEntry. Only entries in
+///            task_entry_db_ have this set. Entries in task_db_ will always
+///            have this as NULL
+///            Running task is not in waitq_ or deferq_
+///
+/// run_count_: Number of running tasks for this TaskEntry
 class TaskEntry {
 public:
     TaskEntry(int task_id);
@@ -96,21 +109,46 @@ public:
     size_t WaitQSize() const { return waitq_.size(); };
     void AddToWaitQ(Task *t);
     bool DeleteFromWaitQ(Task *t);
+
+    /// @brief Adds a task to deferq_.
+    /// Only one task of a given instance goes into deferq_ for its policies.
     void AddToDeferQ(TaskEntry *entry);
+
+    /// @brief Deletes a task from deferq_.
     void DeleteFromDeferQ(TaskEntry &entry);
+
     TaskEntry *ActiveEntryInPolicy();
     bool DeferOnPolicyFail(Task *t);
+
+    /// @brief Starts a task.
+    /// If there are more entries in waitq_ add them to deferq_.
     void RunTask(Task *t);
+
+    /// @brief Starts executing tasks from deferq_ of a TaskEntry.
     void RunDeferQ();
+
+    /// @brief Starts executing tasks from deferq_ of TaskEntry and
+    /// TaskGroup in the temporal order
     void RunCombinedDeferQ();
     void RunWaitQ();
     void RunDeferEntry();
+
+    /// @brief Starts executing tasks from deferq_ of TaskEntries which are
+    /// enabled.
     void RunDeferQForGroupEnable();
+
     void TaskExited(Task *t, TaskGroup *group);
     TaskStats *GetTaskStats();
     void ClearTaskStats();
     void ClearQueues();
+
+    /// @brief Addition/deletion of TaskEntry in the deferq_ is based on the
+    /// seqno.
+    /// seqno of the first Task in the waitq_ is used as the key. This function
+    /// would be invoked by the comparison function during addition/deletion
+    /// of TaskEntry in the deferq_.
     boost::optional<uint64_t> GetTaskDeferEntrySeqno() const;
+
     int GetTaskId() const { return task_id_; }
     int GetTaskInstance() const { return task_instance_; }
     int GetRunCount() const { return run_count_; }
@@ -122,7 +160,7 @@ private:
     friend class TaskGroup;
     friend class TaskScheduler;
 
-    // List of Task's in waitq_
+    /// @brief List of Task's in waitq_
     typedef boost::intrusive::member_hook<Task,
             boost::intrusive::list_member_hook<>, &Task::waitq_hook_> WaitQHook;
     typedef boost::intrusive::list<Task, WaitQHook> TaskWaitQ;
@@ -131,30 +169,41 @@ private:
     typedef boost::intrusive::member_hook<TaskEntry,
         boost::intrusive::set_member_hook<>,
         &TaskEntry::task_defer_node> TaskDeferListOption;
-    // It is a tree of TaskEntries deferred and waiting on the containing task
-    // to exit. The tree is sorted by seqno_ of first task in the TaskEntry
+
+    /// @brief It is a tree of TaskEntries deferred and waiting on the
+    /// containing task to exit. The tree is sorted by seqno_ of first
+    /// task in the TaskEntry
     typedef boost::intrusive::set<TaskEntry, TaskDeferListOption,
         boost::intrusive::compare<TaskDeferEntryCmp> > TaskDeferList;
 
     int             task_id_;
     int             task_instance_;
-    int             run_count_; // # of tasks running
 
-    Task            *run_task_; // Task currently running
-    TaskWaitQ       waitq_;     // Tasks waiting to run on some condition
-    TaskEntryList   policyq_;   // Policy rules for a task
-    TaskDeferList   *deferq_;    // Tasks deferred for this to exit
+    /// @brief No. of tasks running
+    int             run_count_;
+
+    /// @brief Task currently running
+    Task            *run_task_;
+    
+    /// @brief Tasks waiting to run on some condition
+    TaskWaitQ       waitq_;
+    
+    /// @brief Policy rules for a task
+    TaskEntryList   policyq_;
+
+    /// @brief Tasks deferred for this to exit
+    TaskDeferList   *deferq_;
     TaskEntry       *deferq_task_entry_;
     TaskGroup       *deferq_task_group_;
     bool            disable_;
 
-    // Cummulative Maintenance stats
+    /// @brief Cummulative Maintenance stats
     TaskStats       stats_;
 
     DISALLOW_COPY_AND_ASSIGN(TaskEntry);
 };
 
-// Comparison routine for the TaskDeferList
+/// @brief Comparison routine for the TaskDeferList
 struct TaskDeferEntryCmp {
     bool operator() (const TaskEntry &lhs, const TaskEntry &rhs) const {
         return (lhs.GetTaskDeferEntrySeqno() <
@@ -162,15 +211,21 @@ struct TaskDeferEntryCmp {
     }
 };
 
-// TaskGroup maintains per <task-id> information including,
-// polic_set_   : Boolean used to ensure policy is set only once per task
-//                Task policy change is not yet supported
-// policy_      : List of policy rules for the task
-// run_count_   : Number of tasks running in context of this task-group
-// deferq_      : Tasks deferred till run_count_ on this task becomes 0
-// task_entry_  : Default TaskEntry used for task without an instance
-// disable_entry_ : TaskEntry which maintains a deferQ for tasks enqueued
-//                  while TaskGroup is disabled
+/// @brief TaskGroup maintains per <task-id> information including,
+///
+/// polic_set_   : Boolean used to ensure policy is set only once per task
+///                Task policy change is not yet supported
+///
+/// policy_      : List of policy rules for the task
+///
+/// run_count_   : Number of tasks running in context of this task-group
+///
+/// deferq_      : Tasks deferred till run_count_ on this task becomes 0
+///
+/// task_entry_  : Default TaskEntry used for task without an instance
+///
+/// disable_entry_ : TaskEntry which maintains a deferQ for tasks enqueued
+///                  while TaskGroup is disabled
 class TaskGroup {
 public:
     TaskGroup(int task_id);
@@ -179,16 +234,41 @@ public:
     TaskEntry *QueryTaskEntry(int task_instance) const;
     TaskEntry *GetTaskEntry(int task_instance);
     void AddPolicy(TaskGroup *group);
+
+    /// @brief Add task to deferq_
+    /// Only one task of a given instance goes into deferq_ for its policies.
     void AddToDeferQ(TaskEntry *entry);
+
+    /// @brief Enqueue TaskEntry in disable_entry's deferQ
     void AddToDisableQ(TaskEntry *entry);
+
+    /// @brief Add TaskEntries to disable_entry_ which have tasks enqueued and
+    /// are already disabled.
     void AddEntriesToDisableQ();
+
     TaskEntry *GetDisableEntry() { return disable_entry_; }
+
+    /// @brief Delete task from deferq_
     void DeleteFromDeferQ(TaskEntry &entry);
     TaskGroup *ActiveGroupInPolicy();
     bool DeferOnPolicyFail(TaskEntry *entry, Task *t);
+  
+    /// @brief Returns true, if the waiq_ of all the tasks in the group are
+    /// empty.
+    ///
+    /// Note: This function is invoked from TaskScheduler::IsEmpty() for each
+    /// task group and is intended to be invoked only in the test code. If this
+    /// function needs to be used outside test code, then we may want to
+    /// consider storing the waitq_ count for performance reason.
     bool IsWaitQEmpty();
+
     int  TaskRunCount() const {return run_count_;};
+
+    /// @brief Starts executing tasks from deferq_ of a TaskGroup
     void RunDeferQ();
+
+    /// @brief Run tasks that maybe suspended. Schedule tasks only for
+    /// TaskEntries which are enabled.
     void RunDisableEntries();
     void TaskExited(Task *t);
     void PolicySet();
@@ -221,27 +301,42 @@ private:
     friend class TaskEntry;
     friend class TaskScheduler;
 
-    // Vector of Task Group policies
+    /// @brief Vector of Task Group policies
     typedef std::vector<TaskGroup *> TaskGroupPolicyList;
     typedef boost::intrusive::member_hook<TaskEntry,
         boost::intrusive::set_member_hook<>,
         &TaskEntry::task_defer_node> TaskDeferListOption;
-    // It is a tree of TaskEntries deferred and waiting on the containing task
-    // to exit. The tree is sorted by seqno_ of first task in the TaskEntry
+
+    /// @brief It is a tree of TaskEntries deferred and waiting on the
+    /// containing task to exit. The tree is sorted by seqno_ of first
+    /// task in the TaskEntry
     typedef boost::intrusive::set<TaskEntry, TaskDeferListOption,
         boost::intrusive::compare<TaskDeferEntryCmp> > TaskDeferList;
 
     static const int        kVectorGrowSize = 16;
     int                     task_id_;
-    bool                    policy_set_;// policy already set?
-    int                     run_count_; // # of tasks running in the group
+
+    /// @brief Specifies if policy is already set
+    bool                    policy_set_;
+
+    /// @brief No. of tasks running in the group
+    int                     run_count_;
     tbb::atomic<uint64_t>   total_run_time_;
 
-    TaskGroupPolicyList     policy_;    // Policy rules for the group
-    TaskDeferList           deferq_;    // Tasks deferred till run_count_ is 0
-    TaskEntry               *task_entry_;// Task entry for instance(-1)
-    TaskEntry               *disable_entry_;// Task entry for disabled group
-    TaskEntryList           task_entry_db_;  // task-entries in this group
+    /// @brief Policy rules for the group
+    TaskGroupPolicyList     policy_;
+
+    /// @brief Tasks deferred till run_count_ is 0
+    TaskDeferList           deferq_;
+
+    /// @brief Tasks deferred till run_count_ is 0
+    TaskEntry               *task_entry_;
+
+    /// @brief Task entry for disabled group
+    TaskEntry               *disable_entry_;
+
+    /// @brief task-entries in this group
+    TaskEntryList           task_entry_db_;
     uint32_t                execute_delay_;
     uint32_t                schedule_delay_;
     bool                    disable_;
@@ -254,9 +349,6 @@ private:
 // Implementation for class TaskImpl
 ////////////////////////////////////////////////////////////////////////////
 
-// Method called from tbb::task to execute.
-// Invoke Run() method of client.
-// Supports task continuation when Run() returns false
 tbb::task *TaskImpl::execute() {
     TaskInfo::reference running = task_running.local();
     running = parent_;
@@ -314,9 +406,6 @@ tbb::task *TaskImpl::execute() {
     return NULL;
 }
 
-// Destructor called when a task execution is compeleted. Invoked
-// implicitly by tbb::task.
-// Invokes OnTaskExit to schedule tasks pending tasks
 TaskImpl::~TaskImpl() {
     assert(parent_ != NULL);
 
@@ -324,7 +413,6 @@ TaskImpl::~TaskImpl() {
     sched->OnTaskExit(parent_);
 }
 
-// XXX For testing purposes only. Limit the number of tbb worker threads.
 int TaskScheduler::GetThreadCount(int thread_count) {
     static bool init_;
     static int num_cores_;
@@ -362,10 +450,6 @@ bool TaskScheduler::ShouldUseSpawn() {
 // Implementation for class TaskScheduler
 ////////////////////////////////////////////////////////////////////////////
 
-// TaskScheduler constructor.
-// TBB assumes it can use the "thread" invoking tbb::scheduler can be used
-// for task scheduling. But, in our case we dont want "main" thread to be
-// part of tbb. So, initialize TBB with one thread more than its default
 TaskScheduler::TaskScheduler(int task_count) :
     use_spawn_(ShouldUseSpawn()), task_scheduler_(GetThreadCount(task_count) + 1),
     running_(true), seqno_(0), id_max_(0), log_fn_(), track_run_time_(false),
@@ -377,7 +461,6 @@ TaskScheduler::TaskScheduler(int task_count) :
     stop_entry_ = new TaskEntry(-1);
 }
 
-// Free up the task_entry_db_ allocated for scheduler
 TaskScheduler::~TaskScheduler() {
     TaskGroup   *group;
 
@@ -477,7 +560,6 @@ TaskScheduler *TaskScheduler::GetInstance() {
     return singleton_.get();
 }
 
-// Get TaskGroup for a task_id. Grows task_entry_db_ if necessary
 TaskGroup *TaskScheduler::GetTaskGroup(int task_id) {
     assert(task_id >= 0);
     int size = task_group_db_.size();
@@ -494,15 +576,10 @@ TaskGroup *TaskScheduler::GetTaskGroup(int task_id) {
     return group;
 }
 
-// Query TaskGroup for a task_id.Assumes valid entry is present for task_id
 TaskGroup *TaskScheduler::QueryTaskGroup(int task_id) {
     return task_group_db_[task_id];
 }
 
-//
-// Check if there are any Tasks in the given TaskGroup.
-// Assumes that all task ids are mutually exclusive with bgp::Config.
-//
 bool TaskScheduler::IsTaskGroupEmpty(int task_id) const {
     CHECK_CONCURRENCY("bgp::Config");
     tbb::mutex::scoped_lock lock(mutex_);
@@ -512,13 +589,11 @@ bool TaskScheduler::IsTaskGroupEmpty(int task_id) const {
     return group->IsWaitQEmpty();
 }
 
-// Get TaskGroup for a task_id. Grows task_entry_db_ if necessary
 TaskEntry *TaskScheduler::GetTaskEntry(int task_id, int task_instance) {
     TaskGroup *group = GetTaskGroup(task_id);
     return group->GetTaskEntry(task_instance);
 }
 
-// Query TaskEntry for a task-id and task-instance
 TaskEntry *TaskScheduler::QueryTaskEntry(int task_id, int task_instance) {
     TaskGroup *group = QueryTaskGroup(task_id);
     if (group == NULL)
@@ -541,15 +616,6 @@ void TaskScheduler::SetLatencyThreshold(const std::string &name,
     group->schedule_delay_ = schedule;
 }
 
-// Sets Policy for a task.
-// Adds policy entries for the task
-// Example: Policy <tid0> => <tid1, -1> <tid2, inst2> will result in following,
-//      task_db_[tid0] : Rule <tid1, -1> is added to policyq
-//      task_group_db_[tid0, inst2] : Rule <tid2, inst2> is added to policyq
-//
-//      The symmetry of policy will result in following additional rules,
-//      task_db_[tid1] : Rule <tid0, -1> is added to policyq
-//      task_group_db_[tid2, inst2] : Rule <tid0, inst2> is added to policyq
 void TaskScheduler::SetPolicy(int task_id, TaskPolicy &policy) {
     tbb::mutex::scoped_lock     lock(mutex_);
 
@@ -576,8 +642,6 @@ void TaskScheduler::SetPolicy(int task_id, TaskPolicy &policy) {
     }
 }
 
-// Enqueue a Task for running. Starts task if all policy rules are met else
-// puts task in waitq
 void TaskScheduler::Enqueue(Task *t) {
     tbb::mutex::scoped_lock     lock(mutex_);
 
@@ -641,8 +705,6 @@ void TaskScheduler::EnqueueUnLocked(Task *t) {
     return;
 }
 
-// Cancel a Task that can be in RUN/WAIT state.
-// [Note]: The caller needs to ensure that the task exists when Cancel() is invoked.
 TaskScheduler::CancelReturnCode TaskScheduler::Cancel(Task *t) {
     tbb::mutex::scoped_lock  lock(mutex_);
 
@@ -706,8 +768,6 @@ TaskScheduler::CancelReturnCode TaskScheduler::Cancel(Task *t) {
     return QUEUED;
 }
 
-// Method invoked on exit of a Task.
-// Exit of a task can potentially start tasks in pendingq.
 void TaskScheduler::OnTaskExit(Task *t) {
     tbb::mutex::scoped_lock lock(mutex_);
     done_count_++;
@@ -769,10 +829,6 @@ void TaskScheduler::Print() {
     }
 }
 
-// Returns true if there are no tasks enqueued and/or running.
-// If running_only is true, enqueued tasks are ignored i.e. return true if
-// there are no running tasks. Ignore TaskGroup or TaskEntry if it is
-// disabled.
 bool TaskScheduler::IsEmpty(bool running_only) {
     TaskGroup *group;
 
@@ -873,17 +929,6 @@ TaskStats *TaskScheduler::GetTaskStats(int task_id, int instance_id) {
     return group->GetTaskStats(instance_id);
 }
 
-//
-// Platfrom-dependent subroutine in Linux and FreeBSD implementations,
-// used only in TaskScheduler::WaitForTerminateCompletion()
-//
-// In Linux, make sure that all the [tbb] threads launched have completely
-// exited. We do so by looking for the Threads count of this process in
-// /proc/<pid>/status
-//
-// In FreeBSD use libprocstat to check how many threads is running
-// in specific process.
-//
 int TaskScheduler::CountThreadsPerPid(pid_t pid) {
     int threads;
     threads = 0;
@@ -989,9 +1034,6 @@ void TaskScheduler::Terminate() {
     singleton_.reset(NULL);
 }
 
-// XXX This function should not be called in production code.
-// It is only for unit testing to control current running task
-// This function modifies the running task as specified by the input
 void TaskScheduler::SetRunningTask(Task *unit_test) {
     TaskInfo::reference running = task_running.local();
     running = unit_test;
@@ -1002,8 +1044,6 @@ void TaskScheduler::ClearRunningTask() {
     running = NULL;
 }
 
-// following function allows one to increase max num of threads used by
-// TBB
 void TaskScheduler::SetThreadAmpFactor(int n) {
     ThreadAmpFactor_ = n;
 }
@@ -1136,8 +1176,6 @@ bool TaskGroup::DeferOnPolicyFail(TaskEntry *entry, Task *task) {
     return false;
 }
 
-// Add task to deferq_
-// Only one task of a given instance goes into deferq_ for its policies.
 void TaskGroup::AddToDeferQ(TaskEntry *entry) {
     stats_.defer_count_++;
     deferq_.insert(*entry);
@@ -1145,14 +1183,12 @@ void TaskGroup::AddToDeferQ(TaskEntry *entry) {
     entry->deferq_task_group_ = this;
 }
 
-// Delete task from deferq_
 void TaskGroup::DeleteFromDeferQ(TaskEntry &entry) {
     assert(this == entry.deferq_task_group_);
     deferq_.erase(deferq_.iterator_to(entry));
     entry.deferq_task_group_ = NULL;
 }
 
-// Enqueue TaskEntry in disable_entry's deferQ
 void TaskGroup::AddToDisableQ(TaskEntry *entry) {
     disable_entry_->AddToDeferQ(entry);
 }
@@ -1162,7 +1198,6 @@ void TaskGroup::PolicySet() {
     policy_set_ = true;
 }
 
-// Start executing tasks from deferq_ of a TaskGroup
 void TaskGroup::RunDeferQ() {
     TaskDeferList::iterator     it;
 
@@ -1183,13 +1218,9 @@ inline void TaskGroup::TaskExited(Task *t) {
 }
 
 void TaskGroup::RunDisableEntries() {
-    // Run tasks that maybe suspended. Schedule tasks only for
-    // TaskEntries which are enabled.
     disable_entry_->RunDeferQForGroupEnable();
 }
 
-// Add TaskEntries to disable_entry_ which have tasks enqueued and are already
-// disabled.
 void TaskGroup::AddEntriesToDisableQ() {
     TaskEntry *entry;
     if (task_entry_->WaitQSize()) {
@@ -1208,12 +1239,6 @@ void TaskGroup::AddEntriesToDisableQ() {
     }
 }
 
-// Returns true, if the waiq_ of all the tasks in the group are empty.
-//
-// Note: This function is invoked from TaskScheduler::IsEmpty() for each
-// task group and is intended to be invoked only in the test code. If this
-// function needs to be used outside test code, then we may want to consider
-// storing the waitq_ count for performance reason.
 bool TaskGroup::IsWaitQEmpty() {
     TaskEntry *entry;
 
@@ -1348,8 +1373,6 @@ bool TaskEntry::DeleteFromWaitQ(Task *t) {
     return true;
 }
 
-// Add task to deferq_
-// Only one task of a given instance goes into deferq_ for its policies.
 void TaskEntry::AddToDeferQ(TaskEntry *entry) {
     stats_.defer_count_++;
     deferq_->insert(*entry);
@@ -1357,15 +1380,12 @@ void TaskEntry::AddToDeferQ(TaskEntry *entry) {
     entry->deferq_task_entry_ = this;
 }
 
-// Delete task from deferq_
 void TaskEntry::DeleteFromDeferQ(TaskEntry &entry) {
     assert(this == entry.deferq_task_entry_);
     deferq_->erase(deferq_->iterator_to(entry));
     entry.deferq_task_entry_ = NULL;
 }
 
-// Start a single task.
-// If there are more entries in waitq_ add them to deferq_
 void TaskEntry::RunTask (Task *t) {
     stats_.run_count_++;
     if (t->GetTaskInstance() != -1) {
@@ -1431,7 +1451,6 @@ void TaskEntry::RunDeferEntry() {
     return;
 }
 
-// Start executing tasks from deferq_ of a TaskEntry
 void TaskEntry::RunDeferQ() {
     TaskDeferList::iterator     it;
 
@@ -1446,7 +1465,6 @@ void TaskEntry::RunDeferQ() {
     return;
 }
 
-// Start executing tasks from deferq_ of TaskEntries which are enabled
 void TaskEntry::RunDeferQForGroupEnable() {
     TaskDeferList::iterator     it;
 
@@ -1462,7 +1480,7 @@ void TaskEntry::RunDeferQForGroupEnable() {
 
     return;
 }
-// Start executing tasks from deferq_ of TaskEntry and TaskGroup in the temporal order
+
 void TaskEntry::RunCombinedDeferQ() {
     TaskScheduler *scheduler = TaskScheduler::GetInstance();
     TaskGroup *group = scheduler->QueryTaskGroup(task_id_);
@@ -1532,10 +1550,6 @@ TaskStats *TaskEntry::GetTaskStats() {
     return &stats_;
 }
 
-// Addition/deletion of TaskEntry in the deferq_ is based on the seqno.
-// seqno of the first Task in the waitq_ is used as the key. This function
-// would be invoked by the comparison function during addition/deletion
-// of TaskEntry in the deferq_.
 boost::optional<uint64_t> TaskEntry::GetTaskDeferEntrySeqno() const {
     if(waitq_.size()) {
         const Task *task = &(*waitq_.begin());
@@ -1560,7 +1574,7 @@ Task::Task(int task_id) : task_id_(task_id),
     schedule_time_(0), execute_delay_(0), schedule_delay_(0) {
 }
 
-// Start execution of task
+
 void Task::StartTask(TaskScheduler *scheduler) {
     if (enqueue_time_ != 0) {
         schedule_time_ = ClockMonotonicUsec();
