@@ -52,8 +52,8 @@ void LoggingInit() {
     BasicConfigurator config;
     config.configure();
     Logger logger = Logger::getRoot();
-    std::auto_ptr<Layout> layout_ptr(new PatternLayout(loggingPattern));
-    logger.getAllAppenders().at(0)->setLayout(layout_ptr);
+    std::unique_ptr<Layout> layout_ptr(new PatternLayout(loggingPattern));
+    logger.getAllAppenders().at(0)->setLayout(std::move(layout_ptr));
     CheckEnvironmentAndUpdate();
 }
 
@@ -73,9 +73,9 @@ void LoggingInit(const std::string &filename, long maxFileSize, int maxBackupInd
                         : syslogFacility);
         props.setProperty(LOG4CPLUS_TEXT("ident"), syslogident);
         SharedAppenderPtr syslogappender(new SysLogAppender(props));
-        std::auto_ptr<Layout> syslog_layout_ptr(new PatternLayout(
+        std::unique_ptr<Layout> syslog_layout_ptr(new PatternLayout(
                                                     loggingPattern));
-        syslogappender->setLayout(syslog_layout_ptr);
+        syslogappender->setLayout(std::move(syslog_layout_ptr));
         logger.addAppender(syslogappender);
         use_syslog_ = useSyslog;
     } else {
@@ -88,8 +88,8 @@ void LoggingInit(const std::string &filename, long maxFileSize, int maxBackupInd
             logger.addAppender(fileappender);
         }
 
-        std::auto_ptr<Layout> layout_ptr(new PatternLayout(loggingPattern));
-        logger.getAllAppenders().at(0)->setLayout(layout_ptr);
+        std::unique_ptr<Layout> layout_ptr(new PatternLayout(loggingPattern));
+        logger.getAllAppenders().at(0)->setLayout(std::move(layout_ptr));
     }
     CheckEnvironmentAndUpdate();
 }

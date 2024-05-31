@@ -1041,9 +1041,9 @@ void Sandesh::set_logger_appender(const std::string &file_name, long max_file_si
         props.setProperty(LOG4CPLUS_TEXT("ident"), syslogident);
         props.setProperty(LOG4CPLUS_TEXT("additivity"), "false");
         SharedAppenderPtr syslogappender(new SysLogAppender(props));
-        std::auto_ptr<Layout> syslog_layout_ptr(new PatternLayout(
+        std::unique_ptr<Layout> syslog_layout_ptr(new PatternLayout(
                                                     loggingPattern));
-        syslogappender->setLayout(syslog_layout_ptr);
+        syslogappender->setLayout(std::move(syslog_layout_ptr));
         logger.addAppender(syslogappender);
         if (is_sampled_logger) {
             Sandesh::sampled_to_logger_ = true;
