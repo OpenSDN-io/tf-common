@@ -11,39 +11,19 @@ gevent.monkey.patch_all()
 
 
 import importlib
+from io import StringIO
 import pkgutil
 import socket
 import sys
-from builtins import object
-from builtins import str
 
 import bottle
-
-from future import standard_library
 
 from gevent import ssl
 from gevent.pywsgi import WSGIServer
 from gevent.server import StreamServer
 
-import six
-
 from .protocol import TXMLProtocol
 from .transport import TTransport
-standard_library.install_aliases()
-#
-# Prevent:
-# Exception KeyError: KeyError(40918224,) in <module 'threading'
-# from '/usr/lib64/python2.7/threading.pyc'> ignored
-# as per
-# http://stackoverflow.com/questions/8774958/keyerror-in-module-
-# threading-after-a-successful-py-test-run
-#
-if 'threading' in sys.modules:
-    del sys.modules['threading']
-if six.PY2:
-    from StringIO import StringIO
-else:
-    from io import StringIO
 
 
 class SandeshStdLog(object):

@@ -38,13 +38,6 @@ def enum(*sequential, **named):
 # end enum
 
 
-def convert_to_string(item):
-    if isinstance(item, bytes):
-        return item.decode('utf-8')
-    return item
-# end convert_to_string
-
-
 def import_class(import_str):
     """Returns a class from a string including module and class."""
     mod_str, _sep, class_str = import_str.rpartition('.')
