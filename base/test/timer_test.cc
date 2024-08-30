@@ -20,14 +20,14 @@ tbb::atomic<bool> timer_hold_;
 
 class TimerTest : public Timer {
 public:
-    TimerTest(boost::asio::io_service &service, const std::string &name,
+    TimerTest(boost::asio::io_context &service, const std::string &name,
               int task_id, int task_instance)
         : Timer(service, name, task_id, task_instance) {
         TimerManager::AddTimer(this);
         count_++;
     }
 
-    TimerTest(boost::asio::io_service &service, const std::string &name)
+    TimerTest(boost::asio::io_context &service, const std::string &name)
         : Timer(service, name, Timer::GetTimerTaskId(),
                 Timer::GetTimerInstanceId()) {
         TimerManager::AddTimer(this);

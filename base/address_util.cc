@@ -39,7 +39,7 @@ bool IsIp6SubnetMember(
 
 std::string ResolveCanonicalName()
 {
-    boost::asio::io_service io_service;
+    boost::asio::io_context io_service;
     boost::system::error_code error;
     boost::asio::ip::tcp::resolver resolver (io_service);
     boost::asio::ip::tcp::resolver::query query(boost::asio::ip::host_name(),
@@ -66,7 +66,7 @@ std::string ResolveCanonicalName(const std::string& ipv4)
     if (boost::starts_with(ipv4, "127."))
         return "localhost";
     boost::asio::ip::tcp::endpoint endpoint;
-    boost::asio::io_service io_service;
+    boost::asio::io_context io_service;
     boost::asio::ip::address_v4 ip =
         boost::asio::ip::address_v4::from_string(ipv4);
     endpoint.address(ip);
@@ -98,7 +98,7 @@ std::string ResolveCanonicalNameIPv6(const std::string& ipv6)
     return loc_ip;
 // Next code is incompatible with schema_transformer:
 //    boost::asio::ip::tcp::endpoint endpoint;
-//    boost::asio::io_service io_service;
+//    boost::asio::io_context io_service;
 //    boost::asio::ip::address_v6 ip =
 //        boost::asio::ip::address_v6::from_string(loc_ip);
 //    endpoint.address(ip);
@@ -126,7 +126,7 @@ IpAddress AddressFromString(
         boost::asio::ip::address::from_string(ip_address_str, *ec);
     boost::system::error_code error_code = *ec;
     if (error_code.value() != 0) {
-        boost::asio::io_service io_service;
+        boost::asio::io_context io_service;
         std::string ip_string = GetHostIp(&io_service, ip_address_str);
         addr = boost::asio::ip::address::from_string(ip_string, *ec);
     }
@@ -268,7 +268,7 @@ bool ValidateServerEndpoints(std::vector<std::string> list,
 
 // Return IP address string for a host if it is resolvable, empty string
 // otherwise.
-std::string GetHostIp(boost::asio::io_service *io_service,
+std::string GetHostIp(boost::asio::io_context *io_service,
                       const std::string &hostname) {
     boost::asio::ip::tcp::resolver::iterator iter, end;
     boost::system::error_code error;

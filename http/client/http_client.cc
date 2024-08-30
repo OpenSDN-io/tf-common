@@ -427,7 +427,7 @@ void HttpClient::SessionShutdown() {
     TcpServer::Shutdown();
 }
 
-boost::asio::io_service *HttpClient::io_service() {
+boost::asio::io_context *HttpClient::io_service() {
     return this->event_manager()->io_service();
 };
 

@@ -9,6 +9,9 @@
 // so we need to define it manually
 #define BOOST_FUNCTIONAL_FORWARD_ADAPTER_MAX_ARITY 8
 
+#include <functional>
+#include <iostream>
+
 #include <boost/function.hpp>
 #include <boost/functional/factory.hpp>
 #include <boost/functional/forward_adapter.hpp>
@@ -17,37 +20,86 @@
 
 #include "base/util.h"
 
-template <class Derived>
-class Factory {
-  protected:
-    static Derived *GetInstance() {
-        if (singleton_ == NULL) {
-            singleton_ = new Derived();
+struct StaticObjectFactory {
+
+    template<class Base, class ... Args>
+    struct FactoryTypes
+    {
+        using BaseType = Base;
+        using BasePointer = BaseType *;
+        using Signature = BasePointer(Args...);
+        using FunctionType = std::function<Signature>;
+    };
+
+    template<class Base, class Impl>
+    struct Creator {
+        template<class ...Args> static
+        typename FactoryTypes<Base,Args...>::BasePointer
+        new_instance(Args &&... args) {
+            return static_cast<typename
+                FactoryTypes<Base,Args...>::BasePointer>
+                (new Impl(args...));
+        };
+    };
+
+    template<class Base, class Impl, class ... Args>
+    static typename FactoryTypes<Base, Args...>::BasePointer
+    NewInstance(Args ...args)
+    {
+        return static_cast<typename StaticObjectFactory::FactoryTypes
+            <Base, Args...>::BasePointer> (new Impl (args...));
+    };
+
+    template<class Base, class ... Args>
+    struct DefaultLink;
+
+    template<class Base, class ... Args>
+    struct FactoryRecord
+    {
+        using Signature = typename FactoryTypes<Base, Args...>::Signature;
+        using FunctionType = typename FactoryTypes<Base, Args...>::FunctionType;
+        using DefaultLinkType = DefaultLink<Base, Args...>;
+
+        static FunctionType create_func_;
+        static DefaultLinkType default_link_;
+    };
+
+    template<class Base, class Impl, class ... Args>
+    static void LinkImpl()
+    {
+        FactoryRecord<Base, Args...>::create_func_ =
+            StaticObjectFactory::NewInstance<Base, Impl, Args...>;
+    };
+
+    template<class Base, int p>
+    struct ParameterCastTo {
+    };
+
+    template<class Base, class ... Args>
+    struct DefaultLink
+    {
+        DefaultLink()
+        {
+            StaticObjectFactory::LinkImpl<Base, Base, Args...>();
         }
-        return singleton_;
-    }
-  private:
-    static Derived *singleton_;
+    };
+
+    template<class Base, class ... Args>
+    static typename FactoryTypes<Base, Args...>::BasePointer
+    Create(Args ...args) {
+        if (!bool(FactoryRecord<Base, Args...>::create_func_)) {
+            return nullptr;
+        }
+        return FactoryRecord<Base, Args...>::create_func_(args...);
+    };
+
+    template<class BaseType, int par, class ...Args>
+    static typename FactoryTypes<BaseType, Args...>::BasePointer
+    Create(Args &&...args) {
+        return Creator<
+            BaseType,
+            typename ParameterCastTo<BaseType,par>::ImplType>::new_instance(args...);
+    };
 };
-
-#include "base/factory_macros.h"
-
-#define FACTORY_N0_STATIC_REGISTER(_Factory, _BaseType, _TypeImpl)\
-static void _Factory ## _TypeImpl ## Register () {\
-    _Factory::Register<_BaseType>(boost::factory<_TypeImpl *>());\
-}\
-MODULE_INITIALIZER(_Factory ## _TypeImpl ## Register)
-
-#define FACTORY_STATIC_REGISTER(_Factory, _BaseType, _TypeImpl)\
-static void _Factory ## _TypeImpl ## Register () {\
-    _Factory::Register<_BaseType>(boost::forward_adapter<boost::factory<_TypeImpl *> >(boost::factory<_TypeImpl *>()));\
-}\
-MODULE_INITIALIZER(_Factory ## _TypeImpl ## Register)
-
-#define FACTORY_PARAM_STATIC_REGISTER(_Factory, _BaseType, _Param, _TypeImpl)\
-static void _Factory ## _TypeImpl ## Register () {\
-    _Factory::Register<_BaseType, _Param>(boost::forward_adapter<boost::factory<_TypeImpl *> >(boost::factory<_TypeImpl *>()));\
-}\
-MODULE_INITIALIZER(_Factory ## _TypeImpl ## Register)
 
 #endif

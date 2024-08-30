@@ -107,21 +107,24 @@ void ConfigClientManager::SetDefaultSchedulingPolicy() {
 
 }
 
-void ConfigClientManager::SetUp() {
-    config_json_parser_.reset(ConfigFactory::Create<ConfigJsonParserBase>());
+void ConfigClientManager::SetUp(ConfigJsonParserBase *cfg_json_base) {
+    config_json_parser_.reset(cfg_json_base);
     config_json_parser_->Init(this);
     thread_count_ = GetNumConfigReader();
     end_of_rib_computed_at_ = UTCTimestampUsec();
     if (config_options_.config_db_use_etcd) {
 #ifdef CONTRAIL_ETCD_INCL
-        config_db_client_.reset(ConfigFactory::Create<ConfigEtcdClient>
+        config_db_client_.reset(ConfigStaticObjectFactory::Create<ConfigEtcdClient>
                                 (this, evm_, config_options_,
                                  thread_count_));
 #endif
     } else {
         config_db_client_.reset(
-                ConfigFactory::Create<ConfigCassandraClient>(this, evm_,
-                    config_options_, thread_count_));
+                ConfigStaticObjectFactory::CreateRef<ConfigCassandraClient>(
+                    this,
+                    evm_,
+                    config_options_,
+                    thread_count_));
         config_amqp_client_.reset(new ConfigAmqpClient(this, hostname_,
                                                module_name_, config_options_));
     }
@@ -131,13 +134,14 @@ void ConfigClientManager::SetUp() {
     task_id = TaskScheduler::GetInstance()->GetTaskId("config_client::Init");
 
     init_trigger_.reset(new
-         TaskTrigger(boost::bind(&ConfigClientManager::InitConfigClient, this),
+        TaskTrigger(boost::bind(&ConfigClientManager::InitConfigClient, this),
          task_id, 0));
 
     reinit_triggered_ = false;
 }
 
 ConfigClientManager::ConfigClientManager(EventManager *evm,
+        ConfigJsonParserBase *cfg_json_base,
         std::string hostname,
         std::string module_name,
         const ConfigClientOptions& config_options)
@@ -146,14 +150,16 @@ ConfigClientManager::ConfigClientManager(EventManager *evm,
         hostname_(hostname), module_name_(module_name),
         config_options_(config_options) {
     end_of_rib_computed_ = false;
-    SetUp();
+    SetUp(cfg_json_base);
 }
 
 ConfigClientManager::~ConfigClientManager() {
 }
 
 void ConfigClientManager::Initialize() {
-    init_trigger_->Set();
+    if (init_trigger_.get() != nullptr) {
+        init_trigger_->Set();
+    }
 }
 
 ConfigDbClient *ConfigClientManager::config_db_client() const {
@@ -242,14 +248,17 @@ void ConfigClientManager::PostShutdown() {
     // object uuid cache and uuid read request list.
     if (config_options_.config_db_use_etcd) {
 #ifdef CONTRAIL_ETCD_INCL
-        config_db_client_.reset(ConfigFactory::Create<ConfigEtcdClient>
+        config_db_client_.reset(ConfigStaticObjectFactory::Create<ConfigEtcdClient>
                                 (this, evm_, config_options_,
                                  thread_count_));
 #endif
     } else {
-        config_db_client_.reset(ConfigFactory::Create<ConfigCassandraClient>
-                                (this, evm_, config_options_,
-                                thread_count_));
+        config_db_client_.reset(ConfigStaticObjectFactory::
+            CreateRef<ConfigCassandraClient>(
+                this,
+                evm_,
+                config_options_,
+                thread_count_));
         config_amqp_client_.reset(new ConfigAmqpClient(this, hostname_,
                                                module_name_, config_options_));
     }
@@ -282,7 +291,6 @@ bool ConfigClientManager::InitConfigClient() {
         }
         PostShutdown();
     }
-
     // Common code path for both init/reinit
     if (config_options_.config_db_use_etcd) {
 #ifdef CONTRAIL_ETCD_INCL
@@ -295,10 +303,8 @@ bool ConfigClientManager::InitConfigClient() {
             "Config Client Mgr SM: Start RabbitMqReader and init Database");
         config_amqp_client_->StartRabbitMQReader();
     }
-
     CONFIG_CLIENT_DEBUG(ConfigClientMgrDebug,
             "Config Client Mgr SM: Init Database");
-
     config_db_client_->InitDatabase();
     if (is_reinit_triggered()) return false;
     return true;
@@ -317,7 +323,9 @@ void ConfigClientManager::ReinitConfigClient() {
         cond_var_.notify_all();
     }
     reinit_triggered_ = true;
-    init_trigger_->Set();
+    if (init_trigger_.get() != nullptr) {
+        init_trigger_->Set();
+    }
     CONFIG_CLIENT_DEBUG(ConfigClientMgrDebug,
             "Config Client Mgr SM: Re init triggered!");
 }

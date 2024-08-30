@@ -19,7 +19,7 @@ class StatsClient {
 public:
     static const uint32_t kEncodeBufferSize = 2048;
     StatsClient() {};
-    StatsClient(boost::asio::io_service& io_service, const std::string& endpoint);
+    StatsClient(boost::asio::io_context& io_service, const std::string& endpoint);
     ~StatsClient() {}
     virtual void Initialize() = 0;
     virtual bool IsConnected() = 0;
@@ -30,7 +30,7 @@ public:
 #if defined(BOOST_ASIO_HAS_LOCAL_SOCKETS)
 class StatsClientLocal : public StatsClient {
 public:
-    StatsClientLocal(boost::asio::io_service& io_service, const std::string& stats_collector):
+    StatsClientLocal(boost::asio::io_context& io_service, const std::string& stats_collector):
         stats_server_ep_(boost::asio::local::datagram_protocol::endpoint(stats_collector)),
         is_connected_(false) {
         stats_socket_.reset(new boost::asio::local::datagram_protocol::socket(io_service));
@@ -50,7 +50,7 @@ private:
 
 class StatsClientRemote : public StatsClient {
 public:
-    StatsClientRemote(boost::asio::io_service& io_service, const std::string& stats_collector):
+    StatsClientRemote(boost::asio::io_context& io_service, const std::string& stats_collector):
         is_connected_(false) {
         UdpServer::Endpoint stats_ep;
         MakeEndpoint(&stats_ep, stats_collector);

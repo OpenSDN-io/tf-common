@@ -10,8 +10,6 @@ import subprocess
 Import('SandeshEnv')
 env = SandeshEnv.Clone();
 
-env.CppDisableExceptions()  
-
 env.Append(CPPPATH = [
     '#build/include',
     '#src/contrail-common',
@@ -19,6 +17,9 @@ env.Append(CPPPATH = [
     SandeshEnv['TOP'] + '/io',
     SandeshEnv['TOP'],
 ])
+
+env.CppEnableExceptions()
+env.Append(CCFLAGS = ['-fexceptions'])
 
 # Generate the source files
 SandeshGenFiles  = env.SandeshGenCpp('../common/sandesh.sandesh')
@@ -141,15 +142,15 @@ env.Install(env['TOP_INCLUDE'] + '/sandesh', 'sandesh_util.h')
 env.Install(env['TOP_INCLUDE'] + '/sandesh', 'sandesh_options.h')
 env.Install(env['TOP_INCLUDE'] + '/sandesh', SandeshGenHdrs)
 env.Install(env['TOP_INCLUDE'] + '/sandesh', SandeshTraceGenHdrs)
-env.Install(env['TOP_INCLUDE'] + '/sandesh/protocol', 'protocol/TProtocol.h')                                  
-env.Install(env['TOP_INCLUDE'] + '/sandesh/protocol', 'protocol/TVirtualProtocol.h')                                  
-env.Install(env['TOP_INCLUDE'] + '/sandesh/protocol', 'protocol/TXMLProtocol.h')                                  
-env.Install(env['TOP_INCLUDE'] + '/sandesh/protocol', 'protocol/TBinaryProtocol.h')                                  
+env.Install(env['TOP_INCLUDE'] + '/sandesh/protocol', 'protocol/TProtocol.h')
+env.Install(env['TOP_INCLUDE'] + '/sandesh/protocol', 'protocol/TVirtualProtocol.h')
+env.Install(env['TOP_INCLUDE'] + '/sandesh/protocol', 'protocol/TXMLProtocol.h')
+env.Install(env['TOP_INCLUDE'] + '/sandesh/protocol', 'protocol/TBinaryProtocol.h')
 env.Install(env['TOP_INCLUDE'] + '/sandesh/protocol', 'protocol/TJSONProtocol.h')
-env.Install(env['TOP_INCLUDE'] + '/sandesh/transport', 'transport/TTransport.h')                                  
-env.Install(env['TOP_INCLUDE'] + '/sandesh/transport', 'transport/TVirtualTransport.h')                           
-env.Install(env['TOP_INCLUDE'] + '/sandesh/transport', 'transport/TFDTransport.h')                                  
-env.Install(env['TOP_INCLUDE'] + '/sandesh/transport', 'transport/TSimpleFileTransport.h')                                  
+env.Install(env['TOP_INCLUDE'] + '/sandesh/transport', 'transport/TTransport.h')
+env.Install(env['TOP_INCLUDE'] + '/sandesh/transport', 'transport/TVirtualTransport.h')
+env.Install(env['TOP_INCLUDE'] + '/sandesh/transport', 'transport/TFDTransport.h')
+env.Install(env['TOP_INCLUDE'] + '/sandesh/transport', 'transport/TSimpleFileTransport.h')
 env.Install(env['TOP_INCLUDE'] + '/sandesh/transport', 'transport/TBufferTransports.h')
 
 test_suite = SandeshEnv.SConscript('test/SConscript', exports='SandeshEnv SandeshTraceGenSrcs', duplicate = 0)

@@ -80,7 +80,7 @@ private:
     DISALLOW_COPY_AND_ASSIGN(TimerTask);
 };
 
-Timer::Timer(boost::asio::io_service &service, const std::string &name,
+Timer::Timer(boost::asio::io_context &service, const std::string &name,
           int task_id, int task_instance, bool delete_on_completion)
         : impl_(new TimerImpl(service)),
           name_(name),
@@ -199,7 +199,7 @@ TimerManager::TimerSet TimerManager::timer_ref_;
 tbb::mutex TimerManager::mutex_;
 
 Timer *TimerManager::CreateTimer(
-            boost::asio::io_service &service, const std::string &name,
+            boost::asio::io_context &service, const std::string &name,
             int task_id, int task_instance, bool delete_on_completion) {
     Timer *timer = new Timer(service, name, task_id, task_instance,
                              delete_on_completion);

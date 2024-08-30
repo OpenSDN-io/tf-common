@@ -10,8 +10,8 @@
 
 class TaskTrigger {
 public:
-    typedef boost::function<bool(void)> FunctionPtr;
-    TaskTrigger(FunctionPtr func, int task_id, int task_instance);
+    typedef boost::function<bool()> FunctionPtr;
+    TaskTrigger(const FunctionPtr& func, int task_id, int task_instance);
     ~TaskTrigger();
     void Set();
     void Reset();

@@ -37,7 +37,7 @@ public:
     typedef boost::function <void (UnixDomainSocketSession *, Event)>
       EventObserver;
 
-    explicit UnixDomainSocketSession(boost::asio::io_service *io_service)
+    explicit UnixDomainSocketSession(boost::asio::io_context *io_service)
         : socket_(*io_service), session_id_(0) {
     }
 
@@ -83,7 +83,7 @@ public:
                                    UnixDomainSocketSession *, Event) >
       EventObserver;
 
-    UnixDomainSocketServer(boost::asio::io_service *io_service,
+    UnixDomainSocketServer(boost::asio::io_context *io_service,
                            const std::string &file);
 
     void HandleAccept(SessionPtr new_session,
@@ -92,7 +92,7 @@ public:
     void set_observer(EventObserver observer) { observer_ = observer; }
 
 private:
-    boost::asio::io_service *io_service_;
+    boost::asio::io_context *io_service_;
     EventObserver observer_;
     boost::asio::local::stream_protocol::acceptor acceptor_;
     uint64_t session_idspace_;

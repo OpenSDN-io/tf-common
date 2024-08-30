@@ -63,7 +63,7 @@ class ConfigCassandraPartition {
               parent_(parent) {
         }
 
-        ~ObjCacheEntry();
+        virtual ~ObjCacheEntry();
 
         void EnableCassandraReadRetry(const std::string uuid);
         void DisableCassandraReadRetry(const std::string uuid);
@@ -119,7 +119,7 @@ class ConfigCassandraPartition {
         std::vector<ConfigDBUUIDCacheEntry> *entries) const;
     int GetInstanceId() const { return worker_id_; }
 
-    boost::asio::io_service *ioservice();
+    boost::asio::io_context *ioservice();
 
     bool IsListOrMapPropEmpty(const string &uuid_key, const string &lookup_key);
     bool IsTaskTriggered() const;

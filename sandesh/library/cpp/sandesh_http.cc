@@ -415,7 +415,7 @@ SandeshHttp::Init(EventManager *evm, const string module,
     bool success;
     IpAddress http_ip =
         boost::asio::ip::address::from_string(config.http_server_ip, ec);
-    if (ec == 0) {
+    if (!ec) {
         success = hServ_->Initialize(port, http_ip);
     } else {
         success = hServ_->Initialize(port);

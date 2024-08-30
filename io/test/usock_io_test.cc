@@ -13,7 +13,7 @@ namespace {
 
 class UsockServer: public UnixDomainSocketServer {
 public:
-    UsockServer(boost::asio::io_service *io_service, const char *path)
+    UsockServer(boost::asio::io_context *io_service, const char *path)
       : UnixDomainSocketServer(io_service, path) {
       set_observer(boost::bind(&UsockServer::EventHandler, this, _1, _2, _3));
     }

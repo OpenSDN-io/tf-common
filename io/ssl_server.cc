@@ -14,7 +14,7 @@
 
 SslServer::SslServer(EventManager *evm, boost::asio::ssl::context::method m,
                      bool ssl_enabled, bool ssl_handshake_delayed)
-    : TcpServer(evm), context_(*evm->io_service(), m),
+    : TcpServer(evm), context_(m),
       ssl_enabled_(ssl_enabled), ssl_handshake_delayed_(ssl_handshake_delayed) {
     boost::system::error_code ec;
     // By default set verify mode to none, to be set by derived class later.

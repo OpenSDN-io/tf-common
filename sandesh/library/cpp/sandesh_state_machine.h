@@ -168,6 +168,8 @@ private:
     struct EventContainer {
         boost::intrusive_ptr<const sc::event_base> event;
         EvValidate validate;
+        EventContainer() = default;
+        EventContainer(const EventContainer&) = default;
     };
 
     friend class WorkQueue<EventContainer>;
@@ -178,7 +180,7 @@ private:
     bool IdleHoldTimerExpired();
 
     template <typename Ev> void Enqueue(const Ev &event);
-    bool DequeueEvent(EventContainer &ec);
+    bool DequeueEvent(EventContainer ec);
     bool LogEvent(const sc::event_base *event);
     void UpdateRxMsgStats(const std::string &msg_name,
         size_t msg_size);

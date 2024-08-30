@@ -125,7 +125,7 @@ void UnixDomainSocketSession::HandleWrite(
 }
 
 UnixDomainSocketServer::UnixDomainSocketServer(
-        boost::asio::io_service *io, const std::string &file)
+        boost::asio::io_context *io, const std::string &file)
   : io_service_(io),
     acceptor_(*io, boost::asio::local::stream_protocol::endpoint(file)),
     session_idspace_(0) {

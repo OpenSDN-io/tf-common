@@ -18,7 +18,7 @@ using namespace std;
 int
 main()
 {
-    boost::asio::io_service ios;
+    boost::asio::io_context ios;
     netlink_sock sock(ios, 0);
     ios.run();
 }

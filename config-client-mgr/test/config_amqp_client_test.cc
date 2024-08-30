@@ -85,9 +85,10 @@ public:
 class ConfigClientManagerTest : public ConfigClientManager {
 public:
     ConfigClientManagerTest(EventManager *evm,
+        ConfigJsonParserBase *json_parser,
          string hostname, string module_name,
         const ConfigClientOptions& config_options) :
-                ConfigClientManager(evm, hostname, module_name,
+                ConfigClientManager(evm, json_parser, hostname, module_name,
                                     config_options) {
         set_end_of_rib_computed(true);
     }
@@ -101,6 +102,7 @@ protected:
     ConfigAmqpClientTest() :
         thread_(&evm_),
         config_client_manager_(new ConfigClientManagerTest(&evm_,
+            ConfigStaticObjectFactory::Create<ConfigJsonParserBase>(),
             "localhost", "config-test",
             GetConfigOptions())) {
     }
@@ -150,10 +152,10 @@ TEST_F(ConfigAmqpClientTest, Basic) {
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     LoggingInit();
-    ConfigFactory::Register<ConfigAmqpChannel>(
-        boost::factory<AmqpClientInterfaceTest *>());
-    ConfigFactory::Register<ConfigJsonParserBase>(
-        boost::factory<ConfigJsonParserTest *>());
+    ConfigStaticObjectFactory::LinkImpl<ConfigAmqpChannel,
+        AmqpClientInterfaceTest>();
+    ConfigStaticObjectFactory::LinkImpl<ConfigJsonParserBase,
+        ConfigJsonParserTest>();
     int status = RUN_ALL_TESTS();
     TaskScheduler::GetInstance()->Terminate();
     return status;
