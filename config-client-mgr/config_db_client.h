@@ -57,9 +57,9 @@ public:
 
     typedef std::pair<std::string, std::string> ObjTypeFQNPair;
 
-    std::string config_db_user() const;
-    std::string config_db_password() const;
-    std::vector<std::string> config_db_ips() const;
+    const std::string& config_db_user() const;
+    const std::string& config_db_password() const;
+    const std::vector<std::string>& config_db_ips() const;
     int GetFirstConfigDbPort() const;
     virtual void PostShutdown() = 0;
     virtual void InitDatabase() = 0;

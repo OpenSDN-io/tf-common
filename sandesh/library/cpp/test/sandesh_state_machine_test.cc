@@ -368,7 +368,7 @@ TEST_F(SandeshServerStateMachineTest, Matrix) {
     ((EvGen) boost::bind(&SandeshServerStateMachineTest_Matrix_Test::F, this, \
             (SandeshSessionMock *) NULL), E)
 
-    boost::asio::io_service::work work(*evm_.io_service());
+    boost::asio::io_context::work work(*evm_.io_service());
 
     Transitions idle = tuple_list_of
             SERVER_SSM_TRANSITION(EvTcpPassiveOpen, ssm::IDLE)

@@ -831,7 +831,7 @@ class QueueTaskWaterMarkTest : public ::testing::Test {
     virtual void TearDown() {
         TaskScheduler::GetInstance()->ClearTaskStats(wq_task_id_);
     }
-    bool Dequeue(QWMTestEntry &entry) {
+    bool Dequeue(QWMTestEntry entry) {
         return true;
     }
     void SetWorkQueueMaxIterations(size_t niterations) {

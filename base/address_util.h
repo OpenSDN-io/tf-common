@@ -8,12 +8,7 @@
 #include <vector>
 
 #include <base/address.h>
-
-namespace boost {
-namespace asio {
-class io_service;
-}
-}
+#include <boost/asio/io_service.hpp>
 
 /*
  * Returns true if the given IPv4 address is member of the IPv4 subnet
@@ -82,7 +77,7 @@ std::string VectorIpv6ToString(const std::vector<signed char> &ipv6);
  * Return IP address string for a host if it is resolvable, empty string
  * otherwise.
  */
-std::string GetHostIp(boost::asio::io_service *io_service,
+std::string GetHostIp(boost::asio::io_context *io_service,
                       const std::string &hostname);
 
 /*

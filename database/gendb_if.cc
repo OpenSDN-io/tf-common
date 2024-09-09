@@ -148,7 +148,7 @@ class DbDataValuePrinter : public boost::static_visitor<std::string> {
     std::string operator()(const IpAddress &tipaddr) const {
         boost::system::error_code ec;
         std::string ips(tipaddr.to_string(ec));
-        assert(ec == 0);
+        assert(!ec);
         return ips;
     }
     std::string operator()(const GenDb::Blob &tblob) const {

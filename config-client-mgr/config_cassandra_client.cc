@@ -51,10 +51,11 @@ ConfigCassandraClient::ConfigCassandraClient(ConfigClientManager *mgr,
                          EventManager *evm, const ConfigClientOptions &options,
                          int num_workers)
         : ConfigDbClient(mgr, evm, options), num_workers_(num_workers) {
-    dbif_.reset(ConfigFactory::Create<cass::cql::CqlIf>(evm, config_db_ips(),
+    dbif_.reset(ConfigStaticObjectFactory::CreateRef<cass::cql::CqlIf>(
+             evm, config_db_ips(),
              GetFirstConfigDbPort(), config_db_user(),
              config_db_password(),
-             options.config_db_use_ssl, options.config_db_ca_certs));
+             static_cast<bool>(options.config_db_use_ssl), options.config_db_ca_certs));
 
     // Initialized the casssadra connection status;
     InitConnectionInfo();
@@ -62,7 +63,8 @@ ConfigCassandraClient::ConfigCassandraClient(ConfigClientManager *mgr,
 
     for (int i = 0; i < num_workers_; i++) {
         partitions_.push_back(
-                ConfigFactory::Create<ConfigCassandraPartition>(this, i));
+                ConfigStaticObjectFactory::Create<ConfigCassandraPartition>
+                    (this, static_cast<size_t>(i)));
     }
 
     fq_name_reader_.reset(new
@@ -793,7 +795,7 @@ void ConfigCassandraPartition::RemoveObjReqEntry(string &uuid) {
 }
 
 
-boost::asio::io_service *ConfigCassandraPartition::ioservice() {
+boost::asio::io_context *ConfigCassandraPartition::ioservice() {
     return client()->event_manager()->io_service();
 }
 

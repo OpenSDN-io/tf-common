@@ -200,7 +200,7 @@ public:
 
     void ProcessEvent(EnqueuedCb cb);
     struct _GlobalInfo *GlobalInfo() { return gi_; }
-    boost::asio::io_service *io_service();
+    boost::asio::io_context *io_service();
 
     void StartTimer(long);
     void CancelTimer();

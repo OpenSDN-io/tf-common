@@ -34,7 +34,7 @@ class ConfigAmqpClient::RabbitMQReader : public Task {
 public:
     RabbitMQReader(ConfigAmqpClient *amqpclient) :
             Task(amqpclient->reader_task_id()), amqpclient_(amqpclient) {
-        channel_.reset(ConfigFactory::Create<ConfigAmqpChannel>());
+        channel_.reset(ConfigStaticObjectFactory::Create<ConfigAmqpChannel>());
 
         // Connect to rabbit-mq asap so that notification messages over
         // rabbit mq are never missed (during bulk db sync which happens
@@ -115,7 +115,6 @@ void ConfigAmqpClient::StartRabbitMQReader() {
             " dont start RabbitMQ");
         return;
     }
-
     TaskScheduler *scheduler = TaskScheduler::GetInstance();
     Task *task = new RabbitMQReader(this);
     scheduler->Enqueue(task);

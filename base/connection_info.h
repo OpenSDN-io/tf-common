@@ -96,7 +96,7 @@ public:
         return instance_.get();
     }
 
-    void Init(boost::asio::io_service &service, const std::string &hostname,
+    void Init(boost::asio::io_context &service, const std::string &hostname,
         const std::string &module, const std::string &instance_id,
         ProcessStateFn status_cb, std::string table) {
         data_.set_name(hostname);

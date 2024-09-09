@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
  */
-
+#include <iostream>
 #include "base/task_trigger.h"
 
 #include "base/task.h"
@@ -31,7 +31,7 @@ private:
     TaskTrigger *parent_;
 };
 
-TaskTrigger::TaskTrigger(FunctionPtr func, int task_id, int task_instance)
+TaskTrigger::TaskTrigger(const FunctionPtr& func, int task_id, int task_instance)
     : func_(func), task_id_(task_id), task_instance_(task_instance) {
     trigger_ = false;
     disabled_ = false;

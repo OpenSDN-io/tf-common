@@ -464,13 +464,13 @@ static inline unsigned long long int task_util_retry_count() {
 // Wrapper macro to launch a command using fork and exec safely wrt io service.
 #define TASK_UTIL_EXEC_AND_WAIT(evm, cmd)                                      \
 do {                                                                           \
-    (evm).io_service()->notify_fork(boost::asio::io_service::fork_prepare);    \
+    (evm).io_service()->notify_fork(boost::asio::io_context::fork_prepare);    \
     pid_t pid;                                                                 \
     if (!(pid = fork())) {                                                     \
-        (evm).io_service()->notify_fork(boost::asio::io_service::fork_child);  \
+        (evm).io_service()->notify_fork(boost::asio::io_context::fork_child);  \
         execl(cmd, cmd, NULL);                                                 \
     }                                                                          \
-    (evm).io_service()->notify_fork(boost::asio::io_service::fork_parent);     \
+    (evm).io_service()->notify_fork(boost::asio::io_context::fork_parent);     \
     int status;                                                                \
     waitpid(pid, &status, 0);                                                  \
 } while (false)

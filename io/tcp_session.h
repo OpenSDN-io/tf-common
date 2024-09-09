@@ -226,7 +226,7 @@ protected:
     io::SocketStats stats_;
 
 protected:
-    typedef boost::asio::strand Strand;
+    typedef boost::asio::strand<boost::asio::io_context::executor_type> Strand;
     boost::scoped_ptr<Strand> io_strand_;
 
 private:

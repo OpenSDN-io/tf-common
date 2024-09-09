@@ -366,7 +366,6 @@ tbb::task *TaskImpl::execute() {
         } else if (TaskScheduler::GetInstance()->track_run_time()) {
             t = ClockMonotonicUsec();
         }
-
         bool is_complete = parent_->Run();
         if (t != 0) {
             int64_t delay = ClockMonotonicUsec() - t;
@@ -381,7 +380,6 @@ tbb::task *TaskImpl::execute() {
                 group->IncrementTotalRunTime(delay);
             }
         }
-
         running = NULL;
         if (is_complete == true) {
             parent_->SetTaskComplete();

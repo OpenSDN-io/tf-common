@@ -8,7 +8,7 @@
 #include "base/logging.h"
 #include "io/io_log.h"
 
-using boost::asio::io_service;
+using boost::asio::io_context;
 
 SandeshTraceBufferPtr IOTraceBuf(SandeshTraceBufferCreate(IO_TRACE_BUF, 1000));
 
@@ -22,7 +22,7 @@ void EventManager::Shutdown() {
 
 void EventManager::Run() {
     Lock();
-    io_service::work work(io_service_);
+    io_context::work work(io_service_);
     do {
         if (shutdown_) break;
         boost::system::error_code ec;

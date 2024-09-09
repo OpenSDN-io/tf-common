@@ -787,7 +787,7 @@ void SandeshStateMachine::UpdateEventStats(const sc::event_base &event,
     }
 }
 
-bool SandeshStateMachine::DequeueEvent(SandeshStateMachine::EventContainer &ec) {
+bool SandeshStateMachine::DequeueEvent(SandeshStateMachine::EventContainer ec) {
     if (deleted_) {
         return true;
     }

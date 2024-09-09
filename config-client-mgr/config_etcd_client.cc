@@ -87,7 +87,7 @@ ConfigEtcdClient::ConfigEtcdClient(ConfigClientManager *mgr,
                  : ConfigDbClient(mgr, evm, options),
                    num_workers_(num_workers)
 {
-    eqlif_.reset(ConfigFactory::Create<EtcdIf>(config_db_ips(),
+    eqlif_.reset(ConfigStaticObjectFactory::Create<EtcdIf>(config_db_ips(),
                                               GetFirstConfigDbPort(),
                                               false));
 
@@ -96,7 +96,7 @@ ConfigEtcdClient::ConfigEtcdClient(ConfigClientManager *mgr,
 
     for (int i = 0; i < num_workers_; i++) {
         partitions_.push_back(
-            ConfigFactory::Create<ConfigEtcdPartition>(this, i));
+            ConfigStaticObjectFactory::Create<ConfigEtcdPartition>(this, i));
     }
 
     uuid_reader_.reset(new

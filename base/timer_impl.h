@@ -12,7 +12,7 @@ class TimerImpl {
 public:
     typedef boost::asio::steady_timer TimerType;
 
-    TimerImpl(boost::asio::io_service &io_service)
+    TimerImpl(boost::asio::io_context &io_service)
             : timer_(io_service) {
     }
 

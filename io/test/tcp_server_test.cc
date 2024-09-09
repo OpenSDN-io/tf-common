@@ -136,7 +136,7 @@ public:
 
 private:
     int dst_port_;
-    boost::asio::io_service io_service_;
+    boost::asio::io_context io_service_;
     tcp::socket socket_;
     bool is_ipv4_;
 };

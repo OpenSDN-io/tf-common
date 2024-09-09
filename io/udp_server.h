@@ -29,7 +29,7 @@ public:
     static const int kDefaultBufferSize = 4 * 1024;
 
     explicit UdpServer(EventManager *evm, int buffer_size = kDefaultBufferSize);
-    explicit UdpServer(boost::asio::io_service *io_service,
+    explicit UdpServer(boost::asio::io_context *io_service,
                        int buffer_size = kDefaultBufferSize);
     virtual ~UdpServer();
 

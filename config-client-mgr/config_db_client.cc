@@ -46,15 +46,15 @@ ConfigDbClient::ConfigDbClient(ConfigClientManager *mgr,
 ConfigDbClient::~ConfigDbClient() {
 }
 
-string ConfigDbClient::config_db_user() const {
+const string& ConfigDbClient::config_db_user() const {
     return config_db_user_;
 }
 
-string ConfigDbClient::config_db_password() const {
+const string& ConfigDbClient::config_db_password() const {
     return config_db_password_;
 }
 
-vector<string> ConfigDbClient::config_db_ips() const {
+const vector<string>& ConfigDbClient::config_db_ips() const {
     return config_db_ips_;
 }
 

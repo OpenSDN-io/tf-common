@@ -61,7 +61,7 @@ public:
     typedef boost::function<void(std::string, std::string, std::string)>
         ErrorHandler;
 
-    Timer(boost::asio::io_service &service, const std::string &name,
+    Timer(boost::asio::io_context &service, const std::string &name,
           int task_id, int task_instance, bool delete_on_completion = false);
     virtual ~Timer();
 
@@ -199,7 +199,7 @@ inline void intrusive_ptr_release(Timer *timer) {
 //
 class TimerManager {
 public:
-    static Timer *CreateTimer(boost::asio::io_service &service,
+    static Timer *CreateTimer(boost::asio::io_context &service,
                               const std::string &name,
                               int task_id = Timer::GetTimerTaskId(),
                               int task_instance = Timer::GetTimerInstanceId(),

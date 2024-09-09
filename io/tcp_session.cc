@@ -11,6 +11,7 @@
 #include <boost/asio/detail/socket_option.hpp>
 #include <boost/bind.hpp>
 #include <boost/scoped_array.hpp>
+#include <boost/asio/detail/recycling_allocator.hpp>
 
 #include "base/logging.h"
 #include "base/address_util.h"
@@ -99,7 +100,7 @@ TcpSession::TcpSession(
         reader_task_id_ = scheduler->GetTaskId("io::ReaderTask");
     }
     if (server_) {
-        io_strand_.reset(new Strand(*server->event_manager()->io_service()));
+        io_strand_.reset(new Strand(server->event_manager()->io_service()->get_executor()));
     }
     defer_reader_ = false;
     write_blocked_ = false;
@@ -172,8 +173,9 @@ void TcpSession::AsyncReadStartInternal(TcpSessionPtr session) {
 
 void TcpSession::AsyncReadStart() {
     if (io_strand_) {
+        boost::asio::detail::recycling_allocator<void> allocator;
         io_strand_->post(bind(&TcpSession::AsyncReadStartInternal, this,
-                         TcpSessionPtr(this)));
+                         TcpSessionPtr(this)), allocator);
     }
 }
 
@@ -343,8 +345,9 @@ void TcpSession::CloseInternal(const error_code &ec,
 
 void TcpSession::TriggerAsyncReadHandler() {
     if (io_strand_) {
+        boost::asio::detail::recycling_allocator<void> allocator;
         io_strand_->post(bind(&TcpSession::AsyncReadHandler,
-                              TcpSessionPtr(this)));
+                              TcpSessionPtr(this)), allocator);
     }
 }
 

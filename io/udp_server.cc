@@ -46,7 +46,7 @@ private:
     const_buffer buffer_;
 };
 
-UdpServer::UdpServer(boost::asio::io_service *io_service, int buffer_size):
+UdpServer::UdpServer(boost::asio::io_context *io_service, int buffer_size):
     socket_(*io_service),
     buffer_size_(buffer_size),
     state_(Uninitialized),

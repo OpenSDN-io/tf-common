@@ -47,3 +47,5 @@ sandesh = env.Program(target = 'sandesh',
                                 'parse/parse.cc',
                                ])
 env.Install(env['TOP_BIN'], sandesh)
+
+env.Alias('sandesh', sandesh)

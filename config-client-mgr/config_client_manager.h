@@ -41,13 +41,15 @@ public:
 
     typedef std::set<std::string> ObjectTypeList;
 
-    ConfigClientManager(EventManager *evm, std::string hostname,
+    ConfigClientManager(EventManager *evm,
+                        ConfigJsonParserBase *cfg_json_base,
+                        std::string hostname,
                         std::string module_name,
                         const ConfigClientOptions& config_options);
 
-    virtual ~ConfigClientManager();
+    ~ConfigClientManager();
 
-    virtual void Initialize();
+    void Initialize();
     ConfigAmqpClient *config_amqp_client() const;
     ConfigDbClient *config_db_client() const;
     void EnqueueUUIDRequest(std::string oper, std::string obj_type,
@@ -114,7 +116,7 @@ private:
     typedef std::map<LinkMemberPair, LinkDataPair> LinkNameMap;
     typedef std::map<std::string, std::string> WrapperFieldMap;
 
-    void SetUp();
+    void SetUp(ConfigJsonParserBase*);
     void SetDefaultSchedulingPolicy();
 
     LinkNameMap link_name_map_;
@@ -133,7 +135,7 @@ private:
     std::string module_name_;
     ConfigClientOptions config_options_;
     tbb::atomic<bool> reinit_triggered_;
-    boost::shared_ptr<TaskTrigger> init_trigger_;
+    boost::scoped_ptr<TaskTrigger> init_trigger_;
     static bool end_of_rib_computed_;
 };
 

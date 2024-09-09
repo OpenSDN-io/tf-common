@@ -218,7 +218,7 @@ TEST_F(EchoServerTest, Basic) {
     server_->StartReceive();
     error_code ec;
     udp::endpoint server_endpoint = server_->GetLocalEndpoint(&ec);
-    EXPECT_TRUE(ec == 0);
+    EXPECT_TRUE(!ec);
     UDP_UT_LOG_DEBUG("UDP Server: " << server_endpoint);
     int port = server_endpoint.port();
     ASSERT_LT(0, port);

@@ -256,9 +256,10 @@ private:
 class ConfigClientManagerTest : public ConfigClientManager {
 public:
     ConfigClientManagerTest(EventManager *evm,
+        ConfigJsonParserBase *json_parser,
         string hostname, string module_name,
         const ConfigClientOptions& config_options) :
-                ConfigClientManager(evm, hostname, module_name,
+                ConfigClientManager(evm, json_parser, hostname, module_name,
                                     config_options) {
     }
 };
@@ -269,6 +270,7 @@ protected:
     ConfigCassandraClientTest() :
         thread_(&evm_),
         config_client_manager_(new ConfigClientManagerTest(&evm_,
+            ConfigStaticObjectFactory::Create<ConfigJsonParserBase>(),
             "localhost", "config-test", config_options_)) {
     }
 
@@ -371,11 +373,28 @@ int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     LoggingInit();
     ConfigAmqpClient::set_disable(true);
-    ConfigFactory::Register<ConfigCassandraClient>(
-        boost::factory<ConfigCassandraClientMock *>());
-    ConfigFactory::Register<cass::cql::CqlIf>(boost::factory<CqlIfTest *>());
-    ConfigFactory::Register<ConfigJsonParserBase>(
-        boost::factory<ConfigJsonParserTest *>());
+
+    ConfigStaticObjectFactory::LinkImpl<ConfigCassandraClient,
+        ConfigCassandraClientMock,
+        ConfigClientManager *,
+        EventManager *,
+        const ConfigClientOptions &,
+        int>();
+
+
+    ConfigStaticObjectFactory::LinkImpl<cass::cql::CqlIf,
+        CqlIfTest,
+        EventManager *,
+        const std::vector<std::string> &,
+        int,
+        const std::string &,
+        const std::string &,
+        bool,
+        const std::string &>();
+
+    ConfigStaticObjectFactory::LinkImpl<ConfigJsonParserBase,
+        ConfigJsonParserTest>();
+
     int status = RUN_ALL_TESTS();
     TaskScheduler::GetInstance()->Terminate();
     return status;

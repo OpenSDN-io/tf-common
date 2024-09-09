@@ -374,7 +374,7 @@ struct EvGenComp {
 
 
 TEST_F(SandeshClientStateMachineTest, Matrix) {
-    boost::asio::io_service::work work(*evm_.io_service());
+    boost::asio::io_context::work work(*evm_.io_service());
     typedef std::map<EvGen, SandeshClientSM::State, EvGenComp> Transitions;
 
 #define CLIENT_SSM_TRANSITION(F, E) \

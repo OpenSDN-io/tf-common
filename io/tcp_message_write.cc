@@ -2,6 +2,8 @@
  * Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
  */
 
+#include "boost/asio/detail/recycling_allocator.hpp"
+
 #include "io/tcp_message_write.h"
 
 #include "base/util.h"
@@ -41,8 +43,9 @@ int TcpMessageWriter::AsyncSend(const uint8_t *data, size_t len, error_code *ec)
     if (buffer_queue_.empty()) {
         BufferAppend(data, len);
         if (session_->io_strand_) {
+            boost::asio::detail::recycling_allocator<void> allocator;
             session_->io_strand_->post(bind(&TcpSession::AsyncWriteInternal,
-                                       session_, TcpSessionPtr(session_)));
+                                       session_, TcpSessionPtr(session_)), allocator);
         }
     } else {
         BufferAppend(data, len);
