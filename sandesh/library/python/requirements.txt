@@ -1,5 +1,5 @@
 gevent==1.4.0
-bottle<0.13
+bottle
 netaddr<1
 fysom
 future

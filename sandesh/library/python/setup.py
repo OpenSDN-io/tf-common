@@ -36,7 +36,7 @@ setup(
     long_description="Sandesh python Implementation",
     install_requires=[
         'gevent',
-        'bottle<0.13',
+        'bottle',
         'netaddr<1',
         'fysom',
         'future',

@@ -2,7 +2,7 @@ greenlet<2.0.0
 gevent==1.4.0
 eventlet
 testtools
-bottle<0.13
+bottle
 mock
 junitxml
 python-subunit
