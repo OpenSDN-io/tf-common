@@ -6,9 +6,6 @@
 # Connection State
 #
 
-from builtins import object
-from builtins import str
-
 from .gen_py.process_info.constants import ConnectionStatusNames, \
     ConnectionTypeNames, ProcessStateNames
 from .gen_py.process_info.ttypes import ConnectionInfo, \

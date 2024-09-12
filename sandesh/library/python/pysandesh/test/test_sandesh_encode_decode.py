@@ -8,8 +8,6 @@
 # sandesh_encode_decode_test
 #
 
-from __future__ import print_function
-
 import sys
 import unittest
 import uuid

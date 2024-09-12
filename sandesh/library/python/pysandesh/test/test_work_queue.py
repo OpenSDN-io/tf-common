@@ -10,8 +10,6 @@
 
 import functools
 import unittest
-from builtins import object
-from builtins import range
 
 import gevent
 

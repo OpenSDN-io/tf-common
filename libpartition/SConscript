@@ -5,15 +5,15 @@
 #
 
 import os
-import sys
 
 Import('BuildEnv')
 PartEnv = BuildEnv.Clone()
 
 setup_sources = [
-           'setup.py',
-           'MANIFEST.in',
-          ]
+    'setup.py',
+    'MANIFEST.in',
+    'requirements.txt'
+]
 
 setup_sources_rules = []
 for file in setup_sources:
@@ -21,10 +21,10 @@ for file in setup_sources:
         PartEnv.Install(Dir("."), '#src/contrail-common/libpartition/' + file))
 
 local_sources = [
-           '__init__.py',
-           'libpartition.py',
-           'consistent_hash.py',
-          ]
+    '__init__.py',
+    'libpartition.py',
+    'consistent_hash.py',
+]
 
 local_sources_rules = []
 for file in local_sources:

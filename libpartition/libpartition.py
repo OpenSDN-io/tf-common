@@ -1,6 +1,3 @@
-from builtins import str
-from builtins import range
-from builtins import object
 from kazoo.client import KazooClient
 from kazoo.client import KazooState
 from kazoo.exceptions import CancelledError

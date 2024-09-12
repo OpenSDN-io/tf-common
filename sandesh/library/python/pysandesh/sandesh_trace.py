@@ -6,8 +6,6 @@
 # sandesh_trace.py
 #
 
-from builtins import object
-
 
 class SandeshTraceRequestRunner(object):
     def __init__(

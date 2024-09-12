@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 #
 # Copyright (c) 2017 Juniper Networks, Inc. All rights reserved.
 #

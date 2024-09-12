@@ -1,10 +1,7 @@
-from __future__ import print_function
-from __future__ import absolute_import
 #
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
 
-from builtins import object
 import gevent
 from gevent import monkey; monkey.patch_all()
 from pysandesh.sandesh_base import *

@@ -7,7 +7,6 @@
 #
 
 import bisect
-from builtins import object
 
 import gevent
 from gevent.queue import Empty, Queue

@@ -16,9 +16,12 @@ PYSANDESH_TEST_PATH = 'pysandesh/test/'
 PYSANDESH_TEST_INSTALL_PATH = 'pysandesh/test/'
 
 local_modules = [
-                 'setup.py',
-                 'MANIFEST.in'
-                ]
+    'setup.py',
+    'MANIFEST.in',
+    'requirements.txt',
+    'test-requirements.txt',
+    '.stestr.conf'
+]
 
 local_modules_rules = []
 for module in local_modules:
@@ -55,27 +58,27 @@ for elem in web_srv_files:
             Dir(PYSANDESH_INSTALL_PATH + '/webs' + hpath), elem[0] + "/" + elem[1]))
 
 pysandesh_modules = [
-                     '__init__.py',
-                     'Thrift.py',
-                     'tcp_session.py',
-                     'ssl_session.py',
-                     'work_queue.py',
-                     'util.py',
-                     'trace.py',
-                     'sandesh_base.py',
-                     'sandesh_base_logger.py',
-                     'sandesh_client.py',
-                     'sandesh_connection.py',
-                     'sandesh_http.py',
-                     'sandesh_logger.py',
-                     'sandesh_session.py',
-                     'sandesh_state_machine.py',
-                     'sandesh_uve.py',
-                     'sandesh_req_impl.py',
-                     'sandesh_stats.py',
-                     'sandesh_trace.py',
-                     'connection_info.py',
-                    ]
+    '__init__.py',
+    'Thrift.py',
+    'tcp_session.py',
+    'ssl_session.py',
+    'work_queue.py',
+    'util.py',
+    'trace.py',
+    'sandesh_base.py',
+    'sandesh_base_logger.py',
+    'sandesh_client.py',
+    'sandesh_connection.py',
+    'sandesh_http.py',
+    'sandesh_logger.py',
+    'sandesh_session.py',
+    'sandesh_state_machine.py',
+    'sandesh_uve.py',
+    'sandesh_req_impl.py',
+    'sandesh_stats.py',
+    'sandesh_trace.py',
+    'connection_info.py',
+]
 
 pysandesh_modules_rules = []
 for module in pysandesh_modules:
@@ -84,9 +87,9 @@ for module in pysandesh_modules:
                     str(File(PYSANDESH_PATH + module).srcnode())))
 
 transport_modules = [
-                     '__init__.py',
-                     'TTransport.py'
-                    ]
+    '__init__.py',
+    'TTransport.py'
+]
 
 transport_modules_rules = []
 for module in transport_modules:
@@ -95,12 +98,12 @@ for module in transport_modules:
                         File(PYSANDESH_PATH + 'transport/' + module).srcnode()))
 
 protocol_modules = [
-                    '__init__.py',
-                    'TProtocol.py',
-                    'TBinaryProtocol.py',
-                    'TXMLProtocol.py',
-                    'TJSONProtocol.py'
-                   ]
+    '__init__.py',
+    'TProtocol.py',
+    'TBinaryProtocol.py',
+    'TXMLProtocol.py',
+    'TJSONProtocol.py'
+]
 
 protocol_modules_rules = []
 for module in protocol_modules:
@@ -128,10 +131,10 @@ env.Depends(io_pkg, sandesh_uve_pkg)
 process_info_pkg = env.SandeshGenPy('#src/contrail-common/base/sandesh/process_info.sandesh', 'pysandesh/')
 
 test_depend_modules = [
-                       '__init__.py',
-                       'test_utils.py',
-                       'sandesh_req_impl.py'
-                      ]
+    '__init__.py',
+    'test_utils.py',
+    'sandesh_req_impl.py'
+]
 
 test_depend_modules_rules = []
 for module in test_depend_modules:
@@ -139,28 +142,28 @@ for module in test_depend_modules:
         env.Install(PYSANDESH_TEST_INSTALL_PATH, str(File(PYSANDESH_TEST_PATH + module).srcnode())))
 
 requirement_modules = [
-                'requirements.txt',
-                'test-requirements.txt',
-                '.stestr.conf',
-                'tox.ini'
-                ]
+    'requirements.txt',
+    'test-requirements.txt',
+    '.stestr.conf',
+    'tox.ini'
+]
 requirement_modules_rules = []
 for module in requirement_modules:
     requirement_modules_rules.append(
         env.Install(Dir('.'), "#src/contrail-common/sandesh/library/python/" + module))
 
 test_modules = [
-                'test_sandesh_encode_decode.py',
-                'test_sandesh_msg.py',
-                'test_sandesh_session.py',
-                'test_sandesh_trace.py',
-                'test_sandesh_http.py',
-                'test_sandesh_uve_alarm.py',
-                'test_conn_info.py',
-                'test_sandesh_stats.py',
-                'test_sandesh_client.py',
-                'test_work_queue.py'
-               ]
+    'test_sandesh_encode_decode.py',
+    'test_sandesh_msg.py',
+    'test_sandesh_session.py',
+    'test_sandesh_trace.py',
+    'test_sandesh_http.py',
+    'test_sandesh_uve_alarm.py',
+    'test_conn_info.py',
+    'test_sandesh_stats.py',
+    'test_sandesh_client.py',
+    'test_work_queue.py'
+]
 
 test_modules_rules = []
 for module in test_modules:
@@ -180,13 +183,14 @@ gen_test_pkg += env.SandeshGenPy('#src/contrail-common/base/sandesh/cpuinfo.sand
 env.Depends(test_modules_rules, gen_test_pkg)
 
 
-sdist_depends = [local_modules_rules, web_srv_rules,
-                 pysandesh_modules_rules, transport_modules_rules,
-                 protocol_modules_rules, sandesh_hdr_pkg,
-                 sandesh_ctrl_pkg, sandesh_uve_pkg,
-                 sandesh_alarm_pkg, sandesh_trace_pkg,
-                 io_pkg, ds_pkg, process_info_pkg, test_modules_rules,
-                 requirement_modules_rules]
+sdist_depends = [
+    local_modules_rules, web_srv_rules,
+    pysandesh_modules_rules, transport_modules_rules,
+    protocol_modules_rules, sandesh_hdr_pkg,
+    sandesh_ctrl_pkg, sandesh_uve_pkg,
+    sandesh_alarm_pkg, sandesh_trace_pkg,
+    io_pkg, ds_pkg, process_info_pkg, test_modules_rules,
+    requirement_modules_rules]
 
 
 print("DBG:", 'dist/sandesh-%s.tar.gz' % env.GetPyVersion(), Dir('.').path)

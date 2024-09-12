@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 #
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements. See the NOTICE file
@@ -18,7 +17,6 @@ from __future__ import absolute_import
 # under the License.
 #
 
-from builtins import object
 from struct import pack, unpack
 
 from .TProtocol import TProtocolBase

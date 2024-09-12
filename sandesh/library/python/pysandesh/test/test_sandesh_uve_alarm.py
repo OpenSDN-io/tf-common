@@ -8,15 +8,10 @@
 # sandesh_uve_alarm_test
 #
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import json
 import socket
 import sys
 import unittest
-from builtins import range
-from builtins import str
 
 import mock
 

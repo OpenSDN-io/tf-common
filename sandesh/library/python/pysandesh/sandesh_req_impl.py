@@ -6,9 +6,6 @@
 # Sandesh Request Implementation
 #
 
-from builtins import object
-from builtins import str
-
 from pysandesh.gen_py.sandesh.ttypes import SandeshLevel, SandeshType
 from pysandesh.gen_py.sandesh_alarm.constants \
     import SandeshAlarmAckResponseError

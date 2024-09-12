@@ -8,17 +8,9 @@
 # sandesh_session_test
 #
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import socket
 import sys
 import unittest
-from builtins import range
-from builtins import str
-
-from past.utils import old_div
 
 from pysandesh import sandesh_session
 from pysandesh.sandesh_base import Sandesh, sandesh_global
@@ -26,14 +18,7 @@ from pysandesh.sandesh_session import SandeshSendQueue, SandeshSession
 from pysandesh.test.gen_py.msg_test.ttypes import ObjectLogTest, \
     StructObject, SystemLogTest
 
-import six
-if six.PY2:
-    from StringIO import StringIO
-else:
-    from io import StringIO
-
-from future import standard_library # noqa
-standard_library.install_aliases()  # noqa
+from io import StringIO
 
 from .test_utils import get_free_port # noqa
 
@@ -198,9 +183,9 @@ class SandeshWriterTest(unittest.TestCase):
         print('-------------------------')
         msg_info_list = [
            dict(msg=create_fake_sandesh(self._max_msg_size)),
-           dict(msg=create_fake_sandesh(old_div(self._max_msg_size, 2))),
-           dict(msg=create_fake_sandesh(old_div(self._max_msg_size, 4))),
-           dict(msg=create_fake_sandesh((old_div(self._max_msg_size, 4)) + 1)),
+           dict(msg=create_fake_sandesh(self._max_msg_size // 2)),
+           dict(msg=create_fake_sandesh(self._max_msg_size // 4)),
+           dict(msg=create_fake_sandesh((self._max_msg_size // 4) + 1)),
            dict(msg=create_fake_sandesh(self._max_msg_size - 1)),
            dict(msg=create_fake_sandesh(2 * self._max_msg_size)),
         ]
@@ -213,15 +198,10 @@ class SandeshWriterTest(unittest.TestCase):
                 send_buf_cache_size=0),
             dict(
                 send_count=1,
-                send_buf_cache_size=old_div(
-                    self._max_msg_size,
-                    2)),
+                send_buf_cache_size=self._max_msg_size // 2),
             dict(
                 send_count=1,
-                send_buf_cache_size=3 * (
-                    old_div(
-                        self._max_msg_size,
-                        4))),
+                send_buf_cache_size=3 * (self._max_msg_size // 4)),
             dict(
                 send_count=2,
                 send_buf_cache_size=0),
@@ -266,35 +246,32 @@ class SandeshWriterTest(unittest.TestCase):
         print('-------------------------')
         msg_info_list = [
             dict(msg=create_fake_sandesh(self._max_msg_size), send_all=True),
-            dict(msg=create_fake_sandesh(old_div(self._max_msg_size, 2)),
+            dict(msg=create_fake_sandesh(self._max_msg_size // 2),
                  send_all=False),
-            dict(msg=create_fake_sandesh(old_div(self._max_msg_size, 4)),
+            dict(msg=create_fake_sandesh(self._max_msg_size // 4),
                  send_all=True),
-            dict(msg=create_fake_sandesh(old_div(self._max_msg_size, 2)),
+            dict(msg=create_fake_sandesh(self._max_msg_size // 2),
                  send_all=False),
-            dict(msg=create_fake_sandesh(old_div(self._max_msg_size, 2)),
+            dict(msg=create_fake_sandesh(self._max_msg_size // 2),
                  send_all=True),
-            dict(msg=create_fake_sandesh((old_div(self._max_msg_size, 2)) + 1),
+            dict(msg=create_fake_sandesh((self._max_msg_size // 2) + 1),
                  send_all=False),
-            dict(msg=create_fake_sandesh(old_div(self._max_msg_size, 2)),
+            dict(msg=create_fake_sandesh(self._max_msg_size // 2),
                  send_all=True)
         ]
 
         # Fill the send_count and the send_buf_cache_size expected @
         # the end of each iteration
         exp_at_each_it = [
-          dict(
-             send_count=1, send_buf_cache_size=0), dict(
-             send_count=1, send_buf_cache_size=old_div(
-              self._max_msg_size, 2)), dict(
-              send_count=2, send_buf_cache_size=0), dict(
-                  send_count=2, send_buf_cache_size=old_div(
-                      self._max_msg_size, 2)), dict(
-                          send_count=3, send_buf_cache_size=0), dict(
-                              send_count=3, send_buf_cache_size=(
-                                  old_div(
-                                      self._max_msg_size, 2)) + 1), dict(
-                                          send_count=4, send_buf_cache_size=0)]
+            dict(send_count=1, send_buf_cache_size=0),
+            dict(send_count=1, send_buf_cache_size=self._max_msg_size // 2),
+            dict(send_count=2, send_buf_cache_size=0),
+            dict(send_count=2, send_buf_cache_size=self._max_msg_size // 2),
+            dict(send_count=3, send_buf_cache_size=0),
+            dict(send_count=3,
+                 send_buf_cache_size=(self._max_msg_size // 2) + 1),
+            dict(send_count=4, send_buf_cache_size=0)
+        ]
         self.assertEqual(len(msg_info_list), len(exp_at_each_it))
 
         # Fill the send_buf expected @ the end of the test

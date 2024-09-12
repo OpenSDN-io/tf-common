@@ -17,19 +17,10 @@
 # under the License.
 #
 
-from builtins import object
+from io import StringIO
 from struct import pack, unpack
 
-from future import standard_library
-
 from pysandesh.Thrift import TException
-
-import six
-standard_library.install_aliases()
-if six.PY2:
-    from StringIO import StringIO
-else:
-    from io import StringIO
 
 
 class TTransportException(TException):

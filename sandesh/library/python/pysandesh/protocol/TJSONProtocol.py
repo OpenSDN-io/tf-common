@@ -1,12 +1,9 @@
-from __future__ import absolute_import
 #
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
 
 import ctypes
 import re
-from builtins import object
-from builtins import str
 
 import netaddr
 

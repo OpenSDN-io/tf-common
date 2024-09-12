@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 #
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
@@ -8,6 +7,7 @@ from __future__ import absolute_import
 #
 
 import base64
+from collections import OrderedDict
 import copy
 import importlib
 import json
@@ -15,16 +15,8 @@ import os
 import pkgutil
 import sys
 import time
-from builtins import object
-from builtins import str
 
 import gevent
-
-try:
-    from collections import OrderedDict
-except ImportError:
-    # python 2.6 or earlier, use backport
-    from ordereddict import OrderedDict
 
 from . import sandesh_logger as sand_logger
 from . import trace

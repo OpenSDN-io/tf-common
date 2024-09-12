@@ -20,7 +20,5 @@ setup(
                  },
     zip_safe=False,
     long_description="Pysandesh Example Package",
-    install_requires=[
-                      'gevent',
-                     ]
+    install_requires=['gevent']
 )

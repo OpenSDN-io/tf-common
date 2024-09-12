@@ -8,7 +8,6 @@
 
 import collections
 import itertools
-from builtins import object
 
 
 class TraceBuffer(object):

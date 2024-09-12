@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 #
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
@@ -6,8 +5,6 @@ from __future__ import absolute_import
 #
 # Sandesh State Machine
 #
-
-from builtins import object
 
 from fysom import Fysom
 

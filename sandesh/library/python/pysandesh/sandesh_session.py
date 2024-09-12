@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 #
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
@@ -9,8 +8,6 @@ from __future__ import absolute_import
 
 import socket
 import sys
-from builtins import object
-from builtins import str
 from functools import partial
 
 from .gen_py.sandesh.ttypes import SandeshLevel, \

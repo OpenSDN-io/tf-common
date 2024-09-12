@@ -8,15 +8,11 @@
 # sandesh_msg_test
 #
 
-from __future__ import absolute_import
-
 import socket
 import sys
 import time
 import unittest
 import uuid
-from builtins import map
-from builtins import range
 from itertools import chain
 
 from pysandesh.gen_py.sandesh.constants import SANDESH_KEY_HINT

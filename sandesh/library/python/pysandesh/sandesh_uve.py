@@ -7,7 +7,6 @@
 #
 
 import copy
-from builtins import object
 
 
 class SandeshUVETypeMaps(object):

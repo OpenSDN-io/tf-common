@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 #
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
@@ -8,7 +7,6 @@ from __future__ import absolute_import
 #
 
 import os
-from builtins import object
 
 from .gen_py.sandesh.constants import SANDESH_CONTROL_HINT
 from .gen_py.sandesh.ttypes import SandeshRxDropReason

@@ -2,8 +2,6 @@
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
 
-from builtins import str
-from builtins import range
 from pysandesh_example.gen_py.vn.ttypes import VirtualNetwork, VNInfo, VirtualNetworkResp, \
          VirtualNetworkAll, VNStats, VirtualNetworkAllResp
 

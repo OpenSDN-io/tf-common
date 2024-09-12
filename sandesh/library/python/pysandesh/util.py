@@ -1,4 +1,3 @@
-from __future__ import division
 #
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
@@ -11,10 +10,6 @@ import collections
 import datetime
 import sys
 import traceback
-from builtins import range
-from builtins import zip
-
-from past.utils import old_div
 
 
 def UTCTimestampUsec():
@@ -28,7 +23,7 @@ def UTCTimestampUsec():
 
 def UTCTimestampUsecToString(utc_usec):
     return datetime.datetime.fromtimestamp(
-        old_div(utc_usec, 1000000)).strftime('%Y-%m-%d %H:%M:%S')
+        utc_usec // 1000000).strftime('%Y-%m-%d %H:%M:%S')
 # end UTCTimestampUsecToString
 
 

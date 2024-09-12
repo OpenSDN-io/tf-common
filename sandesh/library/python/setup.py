@@ -2,7 +2,17 @@
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
 
+import re
+
 from setuptools import setup
+
+
+def requirements(filename):
+    with open(filename) as f:
+        lines = f.read().splitlines()
+    c = re.compile(r'\s*#.*')
+    return list(filter(bool, map(lambda y: c.sub('', y).strip(), lines)))
+
 
 setup(
     name='sandesh',
@@ -34,12 +44,7 @@ setup(
         'pysandesh.gen_py.process_info': ['*.html', '*.css', '*.xml'],
     },
     long_description="Sandesh python Implementation",
-    install_requires=[
-        'gevent',
-        'bottle<0.13',
-        'netaddr<1',
-        'fysom',
-        'future',
-        'six'
-    ]
+
+    install_requires=requirements('requirements.txt'),
+    tests_require=requirements('test-requirements.txt'),
 )

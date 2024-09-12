@@ -16,7 +16,6 @@
 # @author: Numan Siddique, eNovance
 
 import logging
-from builtins import object
 
 from .gen_py.sandesh.ttypes import SandeshLevel
 

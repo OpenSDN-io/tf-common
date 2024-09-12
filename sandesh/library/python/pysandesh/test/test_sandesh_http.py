@@ -8,9 +8,6 @@
 # sandesh_http_test
 #
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import socket
 import sys
 import time
@@ -19,9 +16,6 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import uuid
-from builtins import str
-
-from future import standard_library
 
 from gevent import monkey
 
@@ -32,7 +26,6 @@ from pysandesh.sandesh_base import sandesh_global
 from .test_utils import get_free_port
 
 monkey.patch_all()
-standard_library.install_aliases()
 sys.path.insert(1, sys.path[0] + '/../../../python')
 
 

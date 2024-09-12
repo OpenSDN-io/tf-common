@@ -20,9 +20,6 @@
 # https://github.com/apache/thrift
 #
 
-from builtins import object
-from builtins import range
-
 from pysandesh.Thrift import TException
 from pysandesh.Thrift import TType
 

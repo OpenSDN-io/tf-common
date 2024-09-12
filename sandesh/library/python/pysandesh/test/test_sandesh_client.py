@@ -8,16 +8,11 @@
 # sandesh_client_test
 #
 
-from __future__ import division
-
 import socket
 import sys
 import unittest
-from builtins import range
 
 import mock
-
-from past.utils import old_div
 
 from pysandesh.sandesh_base import SandeshLevel, SandeshSystem, sandesh_global
 from pysandesh.sandesh_client import SandeshClient
@@ -87,7 +82,7 @@ class SandeshClientTest(unittest.TestCase):
             close_time_usec - (1.5 * last_close_interval_usec),
             last_close_interval_usec)
         self.assertTrue(close)
-        self.assertEqual(old_div((last_close_interval_usec * 2), 1000),
+        self.assertEqual((last_close_interval_usec * 2) // 1000,
                          close_interval_msec)
         # Close event time is between 2 * last close interval and 4 * last
         # close interval
@@ -98,9 +93,7 @@ class SandeshClientTest(unittest.TestCase):
             last_close_interval_usec)
         self.assertTrue(close)
         self.assertEqual(
-            old_div(
-                last_close_interval_usec,
-                1000),
+            last_close_interval_usec // 1000,
             close_interval_msec)
         # Close event ime is beyond 4 * last close interval
         last_close_interval_usec = (initial_close_interval_msec * 2) * 1000
@@ -111,8 +104,8 @@ class SandeshClientTest(unittest.TestCase):
         self.assertTrue(close)
         self.assertEqual(initial_close_interval_msec, close_interval_msec)
         # Maximum close interval
-        last_close_interval_usec = old_div(
-            (SandeshClient._MAX_SM_SESSION_CLOSE_INTERVAL_MSEC * 1000), 2)
+        last_close_interval_usec = (
+            (SandeshClient._MAX_SM_SESSION_CLOSE_INTERVAL_MSEC * 1000) // 2)
         (close, close_interval_msec) = SandeshClient._do_close_sm_session(
             close_time_usec,
             close_time_usec - (1.5 * last_close_interval_usec),

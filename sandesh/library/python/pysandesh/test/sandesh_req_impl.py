@@ -6,8 +6,6 @@
 # Sandesh Request Implementation
 #
 
-from builtins import object
-
 from pysandesh.test.gen_py.sandesh_http_test.ttypes import SandeshHttpRequest
 
 

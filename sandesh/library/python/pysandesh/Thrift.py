@@ -21,7 +21,6 @@
 #
 
 import sys
-from builtins import object
 
 
 class TType(object):

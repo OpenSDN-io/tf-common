@@ -10,7 +10,6 @@
 
 import sys
 import unittest
-from builtins import range
 
 from pysandesh.gen_py.sandesh.ttypes import SandeshRxDropReason, \
     SandeshTxDropReason
