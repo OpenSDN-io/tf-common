@@ -1,6 +1,6 @@
 gevent
 bottle<0.13
-netaddr<1
+netaddr
 fysom
 future
 six
