@@ -36,7 +36,7 @@ cd_cmd = 'cd ' + Dir('.').path + ' && '
 sdist_gen = PartEnv.Command(
     'dist/libpartition-%s.tar.gz' % PartEnv.GetPyVersion(),
     'setup.py',
-    cd_cmd + 'python setup.py sdist')
+    cd_cmd + 'python3 setup.py sdist')
 # install everything before building distribution
 PartEnv.Depends(sdist_gen, sdist_depends)
 
@@ -44,25 +44,23 @@ def SymLink(target, source, env):
     os.symlink(os.path.abspath(str(source[0])), os.path.abspath(str(target[0])))
 
 if 'install' in BUILD_TARGETS:
-    install_cmd_py2 = PartEnv.Command(None,
-                                      'setup.py',
-                                      cd_cmd + 'python setup.py install %s' %
-                                      PartEnv['PYTHON_INSTALL_OPT'])
-    PartEnv.Depends(install_cmd_py2, sdist_depends)
-    PartEnv.Alias('install', install_cmd_py2)
+    install_cmd = PartEnv.Command(None,
+                                  'setup.py',
+                                  cd_cmd + 'python3 setup.py install %s' %
+                                  PartEnv['PYTHON_INSTALL_OPT'])
+    PartEnv.Depends(install_cmd, sdist_depends)
+    PartEnv.Alias('install', install_cmd)
 
-    setup_link_cmd = PartEnv.Command("setup-py3.py", "setup.py", SymLink)
-    PartEnv.Depends(setup_link_cmd, sdist_depends)
-    install_cmd_py3 = PartEnv.Command(None,
-                                      'setup-py3.py',
-                                      cd_cmd + 'python3 setup-py3.py install %s' %
-                                      PartEnv['PYTHON_INSTALL_OPT'])
-    PartEnv.Depends(install_cmd_py3, sdist_depends)
-    PartEnv.Alias('install', install_cmd_py3)
+    install_root = GetOption('install_root')
+    if install_root is None:
+        install_root = ''
+    PartEnv.Alias(
+        'install',
+        PartEnv.Install(
+            install_root + '/opt/opensdn/pip/libpartition/',
+            Entry('#src/contrail-common/libpartition/requirements.txt')))
 
 PartEnv['LIBPARTITION_PKG'] = sdist_gen
-#PartEnv.SConscript('test/SConscript', exports='PartEnv', duplicate = 0)
-#PartEnv.SConscript('docs/SConscript', exports='PartEnv', duplicate = 0)
 
 PartEnv.Default(sdist_gen)
 PartEnv.Alias("contrail:libpartition", sdist_gen)

@@ -197,7 +197,7 @@ print("DBG:", 'dist/sandesh-%s.tar.gz' % env.GetPyVersion(), Dir('.').path)
 sdist_gen = env.Command(
     'dist/sandesh-%s.tar.gz' % env.GetPyVersion(),
     'setup.py',
-    'cd ' + Dir('.').path + ' && python setup.py sdist')
+    'cd ' + Dir('.').path + ' && python3 setup.py sdist')
 
 # install everything before building distribution
 env.Depends(sdist_gen, sdist_depends)
@@ -211,17 +211,19 @@ def SymLink(target, source, env):
     os.symlink(os.path.abspath(str(source[0])), os.path.abspath(str(target[0])))
 
 if 'install' in BUILD_TARGETS:
-    cmd = 'cd ' + Dir('.').path + ' && python setup.py install %s'
-    install_cmd_py2 = env.Command(None, 'setup.py', cmd % env['PYTHON_INSTALL_OPT'])
-    env.Depends(install_cmd_py2, sdist_depends)
-    env.Alias('install', install_cmd_py2)
+    cmd = 'cd ' + Dir('.').path + ' && python3 setup.py install %s'
+    install_cmd = env.Command(None, 'setup.py', cmd % env['PYTHON_INSTALL_OPT'])
+    env.Depends(install_cmd, sdist_depends)
+    env.Alias('install', install_cmd)
 
-    setup_link_cmd = env.Command("setup-py3.py", "setup.py", SymLink)
-    env.Depends(setup_link_cmd, sdist_depends)
-    cmd = 'cd ' + Dir('.').path + ' && python3 setup-py3.py install %s'
-    install_cmd_py3 = env.Command(None, 'setup-py3.py', cmd % env['PYTHON_INSTALL_OPT'])
-    env.Depends(install_cmd_py3, sdist_depends)
-    env.Alias('install', install_cmd_py3)
+    install_root = GetOption('install_root')
+    if install_root is None:
+        install_root = ''
+    env.Alias(
+        'install',
+        env.Install(
+            install_root + '/opt/opensdn/pip/sandesh-library/',
+            Entry('#src/contrail-common/sandesh/library/python/requirements.txt')))
 
 # SetupPyTestSuite* methods don't return any target (please check review 40381)
 # So, until above is merged, we add a target here directly, by referencing a target
