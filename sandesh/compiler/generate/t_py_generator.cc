@@ -569,16 +569,7 @@ string t_py_generator::py_imports() {
  */
 string t_py_generator::future_imports() {
   std::string future_imports("\n");
-  future_imports +=
-    "from future import standard_library\n"
-    "standard_library.install_aliases()\n"
-    "from builtins import hex\n"
-    "from builtins import str\n"
-    "from builtins import map\n"
-    "from builtins import range\n";
-    "from builtins import object\n";
-    
-    return future_imports;
+  return future_imports;
 }
 
 /**
