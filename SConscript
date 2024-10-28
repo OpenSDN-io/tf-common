@@ -46,10 +46,8 @@ if gpp_version_major >= 8:
     common.Append(CCFLAGS = ['-Wno-error=deprecated-declarations', '-Wno-deprecated-declarations'])
     common.Append(CCFLAGS = ['-Wno-error=nonnull-compare', '-Wno-nonnull-compare'])
 
-if not sys.platform.startswith('darwin'):
-    if platform.system().startswith('Linux'):
-        if not platform.linux_distribution()[0].startswith('XenServer'):
-            common.Append(CCFLAGS = ['-Wno-unused-local-typedefs'])
+if not sys.platform.startswith('darwin') and platform.system().startswith('Linux'):
+    common.Append(CCFLAGS = ['-Wno-unused-local-typedefs'])
 if sys.platform.startswith('freebsd'):
     common.Append(CCFLAGS = ['-Wno-unused-local-typedefs'])
 common.Append(CPPPATH = include)

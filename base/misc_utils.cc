@@ -139,6 +139,7 @@ bool MiscUtils::GetPlatformInfo(std::string &distro, std::string &code_name) {
              result += line;
         }
     }
+    pclose(fp);
 
     // parse the strings for centos 6.4, 6.5, trusty, precise..
     if (result.find("trusty") != std::string::npos) {
@@ -162,7 +163,6 @@ bool MiscUtils::GetPlatformInfo(std::string &distro, std::string &code_name) {
     } else {
         return false;
     }
-    fclose(fp);
     return true;
 }
 
