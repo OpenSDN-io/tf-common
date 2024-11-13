@@ -24,6 +24,7 @@ local_sources = [
     '__init__.py',
     'libpartition.py',
     'consistent_hash.py',
+    'consistent_schdlr.py',
 ]
 
 local_sources_rules = []

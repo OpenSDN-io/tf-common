@@ -502,11 +502,7 @@ string t_py_generator::render_sandesh_includes() {
   std::string module = get_real_py_module(program_, gen_twisted_);
   std::string sandesh_includes("\n");
   sandesh_includes +=
-    "import six\n"
-    "if six.PY2:\n"
-    "    from StringIO import StringIO\n"
-    "else:\n"
-    "    from io import StringIO\n"
+    "from io import StringIO\n"
     "import uuid\n"
     "import netaddr\n"
     "from sys import getsizeof\n"

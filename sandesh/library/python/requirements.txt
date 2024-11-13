@@ -2,5 +2,3 @@ gevent
 bottle<0.13
 netaddr<1
 fysom
-future
-six
