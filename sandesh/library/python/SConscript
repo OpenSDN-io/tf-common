@@ -211,19 +211,11 @@ def SymLink(target, source, env):
     os.symlink(os.path.abspath(str(source[0])), os.path.abspath(str(target[0])))
 
 if 'install' in BUILD_TARGETS:
-    cmd = 'cd ' + Dir('.').path + ' && python3 setup.py install %s'
-    install_cmd = env.Command(None, 'setup.py', cmd % env['PYTHON_INSTALL_OPT'])
-    env.Depends(install_cmd, sdist_depends)
-    env.Alias('install', install_cmd)
-
-    install_root = GetOption('install_root')
-    if install_root is None:
-        install_root = ''
-    env.Alias(
-        'install',
-        env.Install(
-            install_root + '/opt/opensdn/pip/sandesh-library/',
-            Entry('#src/contrail-common/sandesh/library/python/requirements.txt')))
+    install_whl_cmd = env.Command(
+        None, 'setup.py',
+        'cd ' + Dir('.').path + ' && python3 setup.py bdist_wheel --dist-dir /pip')
+    env.Depends(install_whl_cmd, sdist_depends)
+    env.Alias('install', install_whl_cmd)
 
 # SetupPyTestSuite* methods don't return any target (please check review 40381)
 # So, until above is merged, we add a target here directly, by referencing a target
