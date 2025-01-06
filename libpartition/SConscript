@@ -29,7 +29,8 @@ local_sources = [
 
 local_sources_rules = []
 for file in local_sources:
-    local_sources_rules.append(PartEnv.Install(Dir("libpartition"), file))
+    local_sources_rules.append(
+        PartEnv.Install("libpartition", "#src/contrail-common/libpartition/libpartition/" + file))
 
 sdist_depends = [setup_sources_rules, local_sources_rules]
 
@@ -45,21 +46,10 @@ def SymLink(target, source, env):
     os.symlink(os.path.abspath(str(source[0])), os.path.abspath(str(target[0])))
 
 if 'install' in BUILD_TARGETS:
-    install_cmd = PartEnv.Command(None,
-                                  'setup.py',
-                                  cd_cmd + 'python3 setup.py install %s' %
-                                  PartEnv['PYTHON_INSTALL_OPT'])
-    PartEnv.Depends(install_cmd, sdist_depends)
-    PartEnv.Alias('install', install_cmd)
-
-    install_root = GetOption('install_root')
-    if install_root is None:
-        install_root = ''
-    PartEnv.Alias(
-        'install',
-        PartEnv.Install(
-            install_root + '/opt/opensdn/pip/libpartition/',
-            Entry('#src/contrail-common/libpartition/requirements.txt')))
+    install_whl_cmd = PartEnv.Command(
+        None, sdist_depends,
+        cd_cmd + 'python3 setup.py bdist_wheel --dist-dir /pip')
+    PartEnv.Alias('install', install_whl_cmd)
 
 PartEnv['LIBPARTITION_PKG'] = sdist_gen
 
