@@ -70,10 +70,6 @@ const uint16_t ContrailPorts::HttpPortKubeManager() {
     return VnsPorts().HttpPortKubeManager;
 }
 
-const uint16_t ContrailPorts::HttpPortMesosManager() {
-    return VnsPorts().HttpPortMesosManager;
-}
-
 // Supervisor control ports
 const uint16_t ContrailPorts::AnalyticsSupervisor() {
     return VnsPorts().AnalyticsSupervisorPort;

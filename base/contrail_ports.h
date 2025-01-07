@@ -27,7 +27,6 @@ public:
     static const uint16_t HttpPortQueryEngine();
     static const uint16_t HttpPortDns();
     static const uint16_t HttpPortKubeManager();
-    static const uint16_t HttpPortMesosManager();
 
     // Supervisor control ports
     static const uint16_t AnalyticsSupervisor();
