@@ -20,9 +20,6 @@
 # https://github.com/apache/thrift
 #
 
-import sys
-
-
 class TType(object):
     STOP = 0
     VOID = 1
@@ -85,7 +82,6 @@ class TMessageType(object):
 
 
 class TProcessor(object):
-
     """Base class for procsessor, which works on two streams."""
 
     def process(iprot, oprot):
@@ -93,17 +89,7 @@ class TProcessor(object):
 
 
 class TException(Exception):
-
     """Base class for all thrift exceptions."""
-
-    # BaseException.message is deprecated in Python v[2.6,3.0)
-    if (2, 6, 0) <= sys.version_info < (3, 0):
-        def _get_message(self):
-            return self._message
-
-        def _set_message(self, message):
-            self._message = message
-        message = property(_get_message, _set_message)
 
     def __init__(self, message=None):
         Exception.__init__(self, message)
@@ -111,7 +97,6 @@ class TException(Exception):
 
 
 class TApplicationException(TException):
-
     """Application level thrift exceptions."""
 
     UNKNOWN = 0

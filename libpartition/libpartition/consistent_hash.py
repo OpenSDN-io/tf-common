@@ -12,9 +12,6 @@ import bisect
 import re
 import sys
 
-if sys.version_info[0] == 3:
-    xrange = range
-
 
 class ConsistentHash(object):
 
@@ -123,9 +120,9 @@ class ConsistentHash(object):
 
         factor = self.interleave_count * weight
 
-        for j in xrange(0, int(factor)):
+        for j in range(0, int(factor)):
             b_key = self._hash_digest('%s-%s' % (node, j))
-            for i in xrange(4):
+            for i in range(4):
                 yield self._hash_val(b_key, lambda x: x + i * 4)
 
     def get_node(self, string_key):
@@ -182,9 +179,7 @@ class ConsistentHash(object):
                 | b_key[entry_fn(0)])
 
     def _hash_digest(self, key):
-        key = key.encode() if sys.version_info[0] == 3 \
-            and isinstance(key, str) else key
-
+        key = key.encode() if isinstance(key, str) else key
         if self.hasher is not None:
             res = [x if isinstance(x, int) else ord(x)
                    for x in self.hasher(key)]
