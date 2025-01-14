@@ -17,19 +17,10 @@ subdirs = [
 ]
 
 include = ['#src/contrail-common', '#/build/include']
-
 libpath = ['#/build/lib']
-
-libs = ['boost_system', 'boost_thread', 'log4cplus']
-libs.append('pthread')
+libs = ['boost_system', 'boost_thread', 'log4cplus', 'pthread', 'tbb']
 
 common = DefaultEnvironment().Clone()
-
-if common['OPT'] == 'production' or common.UseSystemTBB():
-    libs.append('tbb')
-else:
-    libs.append('tbb_debug')
-
 common.Append(LIBPATH = libpath)
 common.Prepend(LIBS = libs)
 

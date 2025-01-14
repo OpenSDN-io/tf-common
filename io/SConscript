@@ -8,7 +8,6 @@ import subprocess
 Import('BuildEnv')
 
 env = BuildEnv.Clone()
-#env.CppDisableExceptions()
 env.Append(CPPPATH = [env['TOP']])
 
 SandeshGenFiles = env.SandeshGenCpp('io.sandesh')

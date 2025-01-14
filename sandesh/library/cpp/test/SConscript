@@ -69,12 +69,8 @@ SandeshLibs = [
 SandeshLibs.extend([
     'pthread',
     'xslt',
+    'tbb'
 ])
-
-if env.UseSystemTBB():
-    SandeshLibs.append('tbb')
-else:
-    SandeshLibs.append('tbb_debug')
 
 env.Append(LIBPATH = SandeshLibPath)
 
