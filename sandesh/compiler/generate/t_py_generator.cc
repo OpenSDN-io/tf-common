@@ -1243,7 +1243,7 @@ void t_py_generator::generate_py_struct_writer(ofstream& out,
       std::map<std::string, std::string>::iterator it;
       for (it = (*f_iter)->annotations_.begin(); it != (*f_iter)->annotations_.end(); it++) {
         if (((*f_iter)->get_name() == "name") && (it->first == "key")) {
-          indent(out) << "if self._table is None or self._table is '': return -1" << endl;
+          indent(out) << "if self._table is None or self._table == '': return -1" << endl;
           indent(out) << "annotations['key'] = " << "self._table" << endl;
         } else {
           indent(out) << "annotations['" << (*it).first << "'] = '" <<

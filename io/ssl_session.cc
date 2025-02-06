@@ -133,9 +133,15 @@ bool SslSession::IsSocketErrorHard(const error_code &ec) {
 
     bool error;
     error = TcpSession::IsSocketErrorHard(ec);
+#if defined(SSL_R_SHORT_READ)  // openssl 1.0
     if (ec.value() == ERR_PACK(ERR_LIB_SSL, 0, SSL_R_SHORT_READ)) {
         error = false;
     }
+#elif defined(BOOST_ASIO_SSL_ERROR_STREAM_TRUNCATED) // new openssl and boost
+    if (ec.value() == boost::asio::ssl::error::stream_truncated) {
+        error = false;
+    }
+#endif
 
     return error;
 }

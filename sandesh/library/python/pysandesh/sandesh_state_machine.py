@@ -281,7 +281,7 @@ class SandeshStateMachine(object):
     # end connect_count
 
     def collector(self):
-        if self._collector_index is -1:
+        if self._collector_index == -1:
             return None
         return self._collectors[self._collector_index]
     # end collector
@@ -364,7 +364,7 @@ class SandeshStateMachine(object):
     # end _delete_session
 
     def _get_next_collector(self):
-        if self._collector_index is -1:
+        if self._collector_index == -1:
             if not self._collectors:
                 return None
             self._collector_index = 0
