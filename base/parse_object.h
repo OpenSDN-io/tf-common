@@ -8,12 +8,8 @@
 #include <string>
 #include <string.h>
 #include <map>
-#ifndef __APPLE__
 #if defined(__linux__)
 #include <byteswap.h>
-#elif defined(__FreeBSD)
-#include <sys/endian.h>
-#endif
 #endif
 
 #ifdef __LITTLE_ENDIAN__
@@ -69,11 +65,7 @@ static inline void put_value(uint8_t *data, int size, uint64_t value) {
 
 static inline double get_double(const uint8_t *data) {
     uint64_t *pp = (uint64_t *)data;
-#ifndef __APPLE__
     uint64_t re = be64_to_host(*pp);
-#else
-    uint64_t re = *pp
-#endif
     double *dp = (double *)&re;
     return *dp;
 }
@@ -85,12 +77,7 @@ static inline void put_double(uint8_t *data, double value) {
         double d;
     } x;
     x.d = value;
-#ifndef __APPLE__
     *pp = host_to_be64(x.u64);
-#else
-    *pp = x.u64;
-#endif
-
 }
 
 struct ParseErrorContext {

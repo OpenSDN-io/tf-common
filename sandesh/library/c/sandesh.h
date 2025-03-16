@@ -33,25 +33,6 @@ extern "C" {
 #define os_realloc(ptr, size)            krealloc(ptr, size, GFP_KERNEL)
 #define os_free(ptr)                     kfree(ptr)
 #define os_log(level, format, arg...)    printk(level format, ##arg)
-
-#elif defined(__FreeBSD__)
-#include <sys/param.h>
-#include <sys/types.h>
-#include <sys/systm.h>
-#include <sys/malloc.h>
-#include <netinet/in.h>
-
-#define OS_LOG_ERR "KERN_ERR"
-#define OS_LOG_DEBUG "KERN_DEBUG"
-
-MALLOC_DECLARE(M_VROUTER);
-
-#define os_malloc(size)               malloc(size, M_VROUTER, M_NOWAIT)
-#define os_zalloc(size)               malloc(size, M_VROUTER, M_NOWAIT|M_ZERO)
-#define os_realloc(ptr, size)         realloc(ptr, size, M_VROUTER, M_NOWAIT)
-#define os_free(ptr)                  free(ptr, M_VROUTER)
-#define os_log(level, format, arg...) printf(level format, ##arg)
-
 #endif
 
 extern int vrouter_dbg;

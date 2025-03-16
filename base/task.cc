@@ -20,13 +20,6 @@
 
 #include <base/sandesh/task_types.h>
 
-#if defined(__FreeBSD__)
-#include <sys/param.h>
-#include <sys/sysctl.h>
-#include <sys/user.h>
-#include <libprocstat.h>
-#endif
-
 using namespace std;
 using tbb::task;
 
@@ -931,34 +924,7 @@ int TaskScheduler::CountThreadsPerPid(pid_t pid) {
     int threads;
     threads = 0;
 
-#if defined(__FreeBSD__)
-    struct kinfo_proc *ki_proc;
-    struct procstat *pstat;
-    unsigned int count_procs;
-
-
-    count_procs = 0;
-
-    pstat = procstat_open_sysctl();
-    if(pstat == NULL) {
-        LOG(ERROR, "procstat_open_sysctl() failed");
-        return -1;
-    }
-
-    ki_proc = procstat_getprocs(pstat, KERN_PROC_PID, pid, &count_procs);
-    if (ki_proc == NULL) {
-        LOG(ERROR, "procstat_open_sysctl() failed");
-        return -1;
-    }
-
-    if (count_procs != 0)
-        procstat_getprocs(pstat, KERN_PROC_PID | KERN_PROC_INC_THREAD,
-                            ki_proc->ki_pid, &threads);
-
-    procstat_freeprocs(pstat, ki_proc);
-    procstat_close(pstat);
-
-#elif defined(__linux__)
+#if defined(__linux__)
     std::ostringstream file_name;
     std::string line;
 

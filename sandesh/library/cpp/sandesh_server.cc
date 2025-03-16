@@ -173,11 +173,7 @@ void SandeshServer::FreeConnectionIndex(int id) {
 
 TcpSession *SandeshServer::CreateSession() {
     typedef boost::asio::detail::socket_option::boolean<
-#ifdef __APPLE__
-        SOL_SOCKET, SO_REUSEPORT> reuse_port_t;
-#else
         SOL_SOCKET, SO_REUSEADDR> reuse_addr_t;
-#endif
     TcpSession *session = SslServer::CreateSession();
     Socket *socket = session->socket();
 
@@ -187,11 +183,7 @@ TcpSession *SandeshServer::CreateSession() {
         SANDESH_LOG(ERROR, __func__ << " Server Open Fail " << err.message());
     }
 
-#ifdef __APPLE__
-    socket->set_option(reuse_port_t(true), err);
-#else
     socket->set_option(reuse_addr_t(true), err);
-#endif
     if (err) {
         SANDESH_LOG(ERROR, __func__ << " SetSockOpt Fail " << err.message());
         return session;

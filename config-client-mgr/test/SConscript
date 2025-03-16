@@ -34,8 +34,7 @@ env.Prepend(LIBS = [ 'config_client_mgr', 'peer_sandesh', 'sandesh', 'http', 'ht
                         'SimpleAmqpClient', 'rabbitmq'
                        ])
 
-if sys.platform != 'darwin':
-    env.Append(LIBS = ['boost_chrono'])
+env.Append(LIBS = ['boost_chrono'])
 
 config_cassandra_client_test = env.UnitTest('config_cassandra_client_test',
                                        ['config_cassandra_client_test.cc'])

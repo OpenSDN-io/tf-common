@@ -84,11 +84,7 @@ TEST_F(SubsetTest, Random)  {
     for (int i = 0; i < 128; i++) {
         vector<int> testset;
         for (size_t j = 0; j < arraysize(values); j++) {
-#ifdef __APPLE__
-            if (arc4random_uniform(2) > 0) {
-#else
             if (rand()%2 > 0) {
-#endif
                 testset.push_back(values[j]);
             }
         }

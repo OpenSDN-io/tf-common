@@ -12,9 +12,6 @@
 
 ssize_t BackTrace::ToString(void * const* callstack, int frames, char *buf,
                             size_t buf_len) {
-#ifdef DARWIN
-    return 0;
-#else
     buf[0] = '\0';
 
     char *str = buf;
@@ -60,7 +57,6 @@ ssize_t BackTrace::ToString(void * const* callstack, int frames, char *buf,
     free(strs);
 
     return (str - buf);
-#endif
 }
 
 int BackTrace::Get(void * const* &callstack) {

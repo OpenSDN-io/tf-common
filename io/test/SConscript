@@ -20,8 +20,7 @@ env.Prepend(LIBS = ['gunit', 'task_test', 'io', 'sandesh', 'http',
                     'http_parser', 'curl',
                     'boost_program_options', 'pugixml', 'ssl', 'crypto'])
 
-if platform.system() not in ['Darwin']:
-    env.Append(LIBS = ['rt'])
+env.Append(LIBS = ['rt'])
 
 event_manager_test = env.UnitTest('event_manager_test',
                                   ['event_manager_test.cc'],
@@ -90,55 +89,9 @@ test_suite += [process_signal_test,
 flaky_test_suite = [
 ]
 
-def clean_coverage(env, target, source):
-    # rm -rf opserver/test/test_coverage
-    import shutil
-    shutil.rmtree('test_coverage', ignore_errors = True)
+test = env.TestSuite('io-test', test_suite)
+env.Alias('src/contrail-common/io:test', test)
 
-    import os
-    lcov_clean = 'lcov --base-directory ' + Dir('#').abspath +\
-        ' --directory ' + Dir(env['TOP']).abspath + '/io --directory ' +\
-        ' --zerocounters'
-    os.system(lcov_clean)
-
-def run_coverage(env, target, source):
-    import os
-    lcov_run = 'lcov --ignore-errors gcov,source --base-directory ' +\
-        Dir('#').abspath + ' --directory ' + Dir(env['TOP']).abspath + '/io ' +\
-        ' -c -o ' + Dir(env['TOP']).abspath + '/io/test/io.info'
-    os.system(lcov_run)
-
-    genhtml_cmd = 'genhtml -o ' + Dir(env['TOP']).abspath +\
-        '/io/test/test_coverage' + ' -t "test coverage" --num-spaces 4 ' +\
-        Dir(env['TOP']).abspath + '/io/test/io.info'
-    os.system(genhtml_cmd)
-
-
-if env['OPT'] != 'coverage':
-    test = env.TestSuite('io-test', test_suite)
-    env.Alias('src/contrail-common/io:test', test)
-
-    flaky_test = env.TestSuite('io-flaky-test', flaky_test_suite)
-    env.Alias('src/contrail-common/io:flaky-test', flaky_test)
-    Return('test_suite')
-else:
-    test = env.TestSuite('io-test', test_suite)
-    clean_coverage_cmd = env.Command('clean_coverage', '', clean_coverage)
-    env.Depends(test, clean_coverage_cmd[0].name)
-    env.AlwaysBuild(clean_coverage_cmd)
-    run_coverage_cmd = env.Command('run_coverage', '', run_coverage)
-    env.Depends(run_coverage_cmd, test[0])
-    env.AlwaysBuild(run_coverage_cmd)
-    env.Alias('src/contrail-common/io:test', run_coverage_cmd)
-
-    if len(flaky_test_suite) != 0:
-        flaky_test = env.TestSuite('io-flaky-test', flaky_test_suite)
-        clean_coverage_cmd = env.Command('clean_coverage', '', clean_coverage)
-        env.Depends(flaky_test, clean_coverage_cmd[0].name)
-        env.AlwaysBuild(clean_coverage_cmd)
-        run_coverage_cmd = env.Command('run_coverage', '', run_coverage)
-        env.Depends(run_coverage_cmd, flaky_test[0])
-        env.AlwaysBuild(run_coverage_cmd)
-        env.Alias('src/contrail-common/io:flaky-test', run_coverage_cmd)
-
-    Return('test_suite')
+flaky_test = env.TestSuite('io-flaky-test', flaky_test_suite)
+env.Alias('src/contrail-common/io:flaky-test', flaky_test)
+Return('test_suite')
