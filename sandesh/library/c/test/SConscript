@@ -59,8 +59,7 @@ env.Append(LIBPATH = SandeshLibPath)
 
 env.Prepend(LIBS = SandeshLibs)
 
-if sys.platform not in ['darwin']:
-    env.Append(LIBS = ['rt'])
+env.Append(LIBS = ['rt'])
 
 sandesh_pre_c_test = env.UnitTest('sandesh_pre_c_test',
     env['SandeshBufferTestGenCppObjs'] + ['sandesh_pre_c_test.cc'])

@@ -35,8 +35,7 @@ env.Append(LIBS = [
     'sandeshvns', 'base', 'pugixml'
 ])
 
-if sys.platform != 'darwin':
-    env.Append(LIBS = ['rt'])
+env.Append(LIBS = ['rt'])
 
 httpcd = env.Program(target = 'httpcd',
                    source = ['main.cc'])

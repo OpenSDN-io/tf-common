@@ -73,17 +73,8 @@ SandeshLibs.extend([
 ])
 
 env.Append(LIBPATH = SandeshLibPath)
-
-if env['OPT'] == 'coverage':
-    env.Prepend(LIBS = 'gcov')
-
 env.Prepend(LIBS = SandeshLibs)
-
-if sys.platform not in ['darwin']:
-    env.Append(LIBS = ['rt'])
-
-if sys.platform.startswith('freebsd'):
-    env.Append(LIBS = ['z', 'lzma', 'iconv'])
+env.Append(LIBS = ['rt'])
 
 def define_unit_test(name, sources):
     sandesh_test = env.UnitTest(

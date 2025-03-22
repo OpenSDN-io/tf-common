@@ -158,38 +158,4 @@ test_suite = SandeshEnv.SConscript('test/SConscript', exports='SandeshEnv Sandes
 import copy
 test_suite_cpp = copy.copy(test_suite)
 
-def code_coverage(target, source, env):
-    # rm -rf sandesh/library/cpp/test_coverage
-    import shutil
-    shutil.rmtree(target[0].path, ignore_errors = True)
-
-    # lcov --base-directory $ROOT -- directory . --zerocounters -q
-    import os
-    os.system('lcov --base-directory . --directory ' + Dir('.').path +
-              ' --zerocounters -q')
-    # execute tests
-    ShEnv = {env['ENV_SHLIB_PATH']: 'build/lib'}
-
-    for test in test_suite_cpp:
-        cmd = test[0].path
-        logfile = open(cmd + '.log', 'w')
-        subprocess.call([cmd], stdout=logfile, env=ShEnv)
-
-    # lcov --base-directory $ROOT -- directory . -c -o sandesh_cpp_test_intermediate.info
-    os.system('lcov --base-directory . --directory ' + Dir('.').path +
-              ' -c -o sandesh_cpp_test_intermediate.info')
-
-    os.system('lcov -e sandesh_cpp_test_intermediate.info ' +
-            Dir('#').abspath + '/src/contrail-common/sandesh/library/cpp/*' +
-            ' -o sandesh_cpp_test.info')
-
-    # genhtml -o src/contrail-common/sandesh/library/cpp/test_coverage sandesh_cpp_test.info
-    os.system('genhtml --no-branch-coverage -o ' + target[0].path +
-              ' -t "test coverage" --num-spaces 4 sandesh_cpp_test.info')
-
-if env['OPT'] == 'coverage':
-    test_coverage = env.Command(Dir('test_coverage'), '', code_coverage)
-    env.AlwaysBuild(test_coverage)
-    env.Alias('src/contrail-common/sandesh:test_coverage', test_coverage)
-
 Return('test_suite')
