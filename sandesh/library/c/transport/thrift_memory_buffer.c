@@ -94,7 +94,7 @@ thrift_memory_buffer_wrote_bytes (ThriftMemoryBuffer *t, u_int32_t len)
 }
 
 /* implements thrift_transport_read */
-int32_t
+static int32_t
 thrift_memory_buffer_read (ThriftTransport *transport, void *buf,
                            u_int32_t len, int *error)
 {
@@ -122,17 +122,17 @@ thrift_memory_buffer_read (ThriftTransport *transport, void *buf,
 
 /* implements thrift_transport_read_end
  * called when read is complete.  nothing to do on our end. */
-u_int8_t
-thrift_memory_buffer_read_end (ThriftTransport *transport ,
-                               int *error)
-{
-  THRIFT_UNUSED_VAR (transport);
-  THRIFT_UNUSED_VAR (error);
-  return 1;
-}
+//static u_int8_t
+//thrift_memory_buffer_read_end (ThriftTransport *transport ,
+//                               int *error)
+//{
+//  THRIFT_UNUSED_VAR (transport);
+//  THRIFT_UNUSED_VAR (error);
+//  return 1;
+//}
 
 /* implements thrift_transport_write */
-u_int8_t
+static u_int8_t
 thrift_memory_buffer_write (ThriftTransport *transport,
                             const void *buf,
                             const u_int32_t len, int *error)
@@ -190,15 +190,15 @@ thrift_memory_buffer_init (ThriftMemoryBuffer *transport, void *buf, u_int32_t s
 }
 
 /* destructor */
-void
-thrift_memory_buffer_finalize (ThriftMemoryBuffer *transport)
-{
-  if (transport->buf != NULL && transport->owner)
-  {
-    os_free (transport->buf);
-  }
-  transport->buf = NULL;
-  transport->buf_size = 0;
-  transport->buf_roffset = 0;
-  transport->buf_woffset = 0;
-}
+//static void
+//thrift_memory_buffer_finalize (ThriftMemoryBuffer *transport)
+//{
+//  if (transport->buf != NULL && transport->owner)
+//  {
+//    os_free (transport->buf);
+//  }
+//  transport->buf = NULL;
+//  transport->buf_size = 0;
+//  transport->buf_roffset = 0;
+//  transport->buf_woffset = 0;
+//}

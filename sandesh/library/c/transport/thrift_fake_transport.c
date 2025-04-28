@@ -11,7 +11,7 @@
 #include "sandesh.h"
 
 /* implements thrift_transport_read */
-int32_t
+static int32_t
 thrift_fake_transport_read (ThriftTransport *transport, void *buf,
                             u_int32_t len, int *error)
 {
@@ -24,7 +24,7 @@ thrift_fake_transport_read (ThriftTransport *transport, void *buf,
 }
 
 /* implements thrift_transport_write */
-u_int8_t
+static u_int8_t
 thrift_fake_transport_write (ThriftTransport *transport,
                              const void *buf,
                              const u_int32_t len, int *error)
