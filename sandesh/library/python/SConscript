@@ -217,13 +217,6 @@ if 'install' in BUILD_TARGETS:
     env.Depends(install_whl_cmd, sdist_depends)
     env.Alias('install', install_whl_cmd)
 
-# SetupPyTestSuite* methods don't return any target (please check review 40381)
-# So, until above is merged, we add a target here directly, by referencing a target
-# created by SetupPyTestSuiteWithDeps (tools/build/rules.py:258)
-#
-# Also, We can't use SetupPyTestSuite because it adds sandesh itself as dependency.
-# So, we are using SetupPyTestSuiteWithDeps with no dependency.
-test_target = env.SetupPyTestSuiteWithDeps(sdist_gen, sdist_depends=[], use_tox=True)
-test_target = 'src/contrail-common/sandesh/library/python:test'
+test_target = env.SetupPyTestSuite(sdist_gen, use_tox=True)
 env.Alias('sandesh:pytest', test_target)
 Return('test_target')
