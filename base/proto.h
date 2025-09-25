@@ -5,6 +5,9 @@
 #ifndef ctrlplane_proto_h
 #define ctrlplane_proto_h
 
+#define BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS
+#define BOOST_MPL_LIMIT_MAP_SIZE 30
+
 #include <map>
 #include <memory>
 
