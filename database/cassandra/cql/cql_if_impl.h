@@ -9,7 +9,12 @@
 
 #include <boost/unordered_map.hpp>
 
+#include <linux/version.h>
+#if defined(RHEL_MAJOR) && (RHEL_MAJOR >= 9)
+#include <cassandra/cassandra.h>
+#else
 #include <cassandra.h>
+#endif
 
 #include <io/event_manager.h>
 #include <base/timer.h>
