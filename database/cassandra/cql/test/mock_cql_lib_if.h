@@ -5,7 +5,13 @@
 #ifndef DATABASE_CASSANDRA_CQL_TEST_MOCK_CQL_LIB_IF_H_
 #define DATABASE_CASSANDRA_CQL_TEST_MOCK_CQL_LIB_IF_H_
 
+#include <linux/version.h>
+#if defined(RHEL_MAJOR) && (RHEL_MAJOR >= 9)
+#include <cassandra/cassandra.h>
+#else
 #include <cassandra.h>
+#endif
+
 #include <database/cassandra/cql/cql_lib_if.h>
 
 namespace cass {

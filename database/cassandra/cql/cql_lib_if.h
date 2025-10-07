@@ -5,7 +5,12 @@
 #ifndef DATABASE_CASSANDRA_CQL_CQL_LIB_IF_H_
 #define DATABASE_CASSANDRA_CQL_CQL_LIB_IF_H_
 
+#include <linux/version.h>
+#if defined(RHEL_MAJOR) && (RHEL_MAJOR >= 9)
+#include <cassandra/cassandra.h>
+#else
 #include <cassandra.h>
+#endif
 
 namespace cass {
 namespace cql {
