@@ -10,213 +10,46 @@ Import('SandeshEnv');
 
 env = SandeshEnv.Clone();
 
-PYSANDESH_PATH = 'pysandesh/'
-PYSANDESH_INSTALL_PATH = 'pysandesh/'
-PYSANDESH_TEST_PATH = 'pysandesh/test/'
-PYSANDESH_TEST_INSTALL_PATH = 'pysandesh/test/'
-
-local_modules = [
-    'setup.py',
-    'MANIFEST.in',
-    'requirements.txt',
-    'test-requirements.txt',
-    '.stestr.conf'
-]
-
-local_modules_rules = []
-for module in local_modules:
-    local_modules_rules.append(
-        env.Install(Dir('.'), '#src/contrail-common/sandesh/library/python/' + module))
-
-web_srv_rules = []
-web_srv_files = [
-('#/src/contrail-common/sandesh/library/common/webs','css/bootstrap.min.css'),
-('#/src/contrail-common/sandesh/library/common/webs','css/DT_bootstrap.css'),
-('#/src/contrail-common/sandesh/library/common/webs','css/images/sort_asc.png'),
-('#/src/contrail-common/sandesh/library/common/webs','css/images/sort_asc_disabled.png'),
-('#/src/contrail-common/sandesh/library/common/webs','css/images/sort_both.png'),
-('#/src/contrail-common/sandesh/library/common/webs','css/images/sort_desc.png'),
-('#/src/contrail-common/sandesh/library/common/webs','css/images/sort_desc_disabled.png'),
-('#/src/contrail-common/sandesh/library/common/webs','css/style.css'),
-('#/src/contrail-common/sandesh/library/common/webs','js/bootstrap.min.js'),
-('#/src/contrail-common/sandesh/library/common/webs','js/DT_bootstrap.js'),
-('#/src/contrail-common/sandesh/library/common/webs','js/jquery-2.0.3.min.js'),
-('#/src/contrail-common/sandesh/library/common/webs','js/jquery.dataTables.min.js'),
-('#/src/contrail-common/sandesh/library/common/webs','js/util.js'),
-('#/src/contrail-common/sandesh/library/common/webs','universal_parse.xsl')]
-
-for elem in web_srv_files:
-    terms = elem[1].rsplit("/",1)
-    if len(terms) == 1:
-        hpath = ""
-        hfile = terms[0]
-    else:
-        hpath = "/" + terms[0]
-        hfile = terms[1]
-
-    web_srv_rules.append(env.Install(
-            Dir(PYSANDESH_INSTALL_PATH + '/webs' + hpath), elem[0] + "/" + elem[1]))
-
-pysandesh_modules = [
-    '__init__.py',
-    'Thrift.py',
-    'tcp_session.py',
-    'ssl_session.py',
-    'work_queue.py',
-    'util.py',
-    'trace.py',
-    'sandesh_base.py',
-    'sandesh_base_logger.py',
-    'sandesh_client.py',
-    'sandesh_connection.py',
-    'sandesh_http.py',
-    'sandesh_logger.py',
-    'sandesh_session.py',
-    'sandesh_state_machine.py',
-    'sandesh_uve.py',
-    'sandesh_req_impl.py',
-    'sandesh_stats.py',
-    'sandesh_trace.py',
-    'connection_info.py',
-]
-
-pysandesh_modules_rules = []
-for module in pysandesh_modules:
-    pysandesh_modules_rules.append(
-        env.Install(PYSANDESH_INSTALL_PATH,
-                    str(File(PYSANDESH_PATH + module).srcnode())))
-
-transport_modules = [
-    '__init__.py',
-    'TTransport.py'
-]
-
-transport_modules_rules = []
-for module in transport_modules:
-    transport_modules_rules.append(
-            env.Install(PYSANDESH_INSTALL_PATH + 'transport/',
-                        File(PYSANDESH_PATH + 'transport/' + module).srcnode()))
-
-protocol_modules = [
-    '__init__.py',
-    'TProtocol.py',
-    'TBinaryProtocol.py',
-    'TXMLProtocol.py',
-    'TJSONProtocol.py'
-]
-
-protocol_modules_rules = []
-for module in protocol_modules:
-    protocol_modules_rules.append(
-        env.Install(PYSANDESH_INSTALL_PATH + 'protocol/',
-                    File(PYSANDESH_PATH + 'protocol/' + module).srcnode()))
-
+base_path = '#src/contrail-common/sandesh/library/python/pysandesh/'
 # Auto-generated SandeshHeader package
-sandesh_hdr_pkg = env.SandeshGenPy('#src/contrail-common/sandesh/library/common/sandesh.sandesh', 'pysandesh/')
+sandesh_hdr_pkg = env.SandeshGenPy('#src/contrail-common/sandesh/library/common/sandesh.sandesh', base_path)
 # Auto-generated Sandesh Ctrl package
-sandesh_ctrl_pkg = env.SandeshGenPy('#src/contrail-common/sandesh/library/common/sandesh_ctrl.sandesh', 'pysandesh/')
+sandesh_ctrl_pkg = env.SandeshGenPy('#src/contrail-common/sandesh/library/common/sandesh_ctrl.sandesh', base_path)
 # Auto-generated Sandesh UVE package
-sandesh_uve_pkg = env.SandeshGenPy('#src/contrail-common/sandesh/library/common/sandesh_uve.sandesh', 'pysandesh/')
+sandesh_uve_pkg = env.SandeshGenPy('#src/contrail-common/sandesh/library/common/sandesh_uve.sandesh', base_path)
 # Auto-generated Sandesh Alarm package
-sandesh_alarm_pkg = env.SandeshGenPy('#src/contrail-common/sandesh/library/common/sandesh_alarm.sandesh', 'pysandesh/')
+sandesh_alarm_pkg = env.SandeshGenPy('#src/contrail-common/sandesh/library/common/sandesh_alarm.sandesh', base_path)
 # Auto-generated Sandesh Trace package
-sandesh_trace_pkg = env.SandeshGenPy('#src/contrail-common/sandesh/library/common/sandesh_trace.sandesh', 'pysandesh/')
+sandesh_trace_pkg = env.SandeshGenPy('#src/contrail-common/sandesh/library/common/sandesh_trace.sandesh', base_path)
 # Auto-generated derived stats
-ds_pkg = env.SandeshGenPy('#src/contrail-common/sandesh/library/common/derived_stats_results.sandesh', 'pysandesh/gen_py/sandesh_uve/', False)
+ds_pkg = env.SandeshGenPy('#src/contrail-common/sandesh/library/common/derived_stats_results.sandesh', base_path + 'gen_py/sandesh_uve/', False)
 env.Depends(ds_pkg, sandesh_uve_pkg)
 # Generate the io files and install in sandesh_uve
-io_pkg = env.SandeshGenPy('#src/contrail-common/io/io.sandesh', 'pysandesh/gen_py/sandesh_uve/', False)
+io_pkg = env.SandeshGenPy('#src/contrail-common/io/io.sandesh', base_path + 'gen_py/sandesh_uve/', False)
 env.Depends(io_pkg, sandesh_uve_pkg)
 # Auto-generated Connection Info package
-process_info_pkg = env.SandeshGenPy('#src/contrail-common/base/sandesh/process_info.sandesh', 'pysandesh/')
+process_info_pkg = env.SandeshGenPy('#src/contrail-common/base/sandesh/process_info.sandesh', base_path)
 
-test_depend_modules = [
-    '__init__.py',
-    'test_utils.py',
-    'sandesh_req_impl.py'
-]
-
-test_depend_modules_rules = []
-for module in test_depend_modules:
-    test_depend_modules_rules.append(
-        env.Install(PYSANDESH_TEST_INSTALL_PATH, str(File(PYSANDESH_TEST_PATH + module).srcnode())))
-
-requirement_modules = [
-    'requirements.txt',
-    'test-requirements.txt',
-    '.stestr.conf',
-    'tox.ini'
-]
-requirement_modules_rules = []
-for module in requirement_modules:
-    requirement_modules_rules.append(
-        env.Install(Dir('.'), "#src/contrail-common/sandesh/library/python/" + module))
-
-test_modules = [
-    'test_sandesh_encode_decode.py',
-    'test_sandesh_msg.py',
-    'test_sandesh_session.py',
-    'test_sandesh_trace.py',
-    'test_sandesh_http.py',
-    'test_sandesh_uve_alarm.py',
-    'test_conn_info.py',
-    'test_sandesh_stats.py',
-    'test_sandesh_client.py',
-    'test_work_queue.py'
-]
-
-test_modules_rules = []
-for module in test_modules:
-    test_modules_rules.append(
-        env.Install(PYSANDESH_TEST_INSTALL_PATH, str(File(PYSANDESH_TEST_PATH + module).srcnode())))
-env.Depends(test_modules_rules, test_depend_modules_rules)
-
-
-gen_test_pkg = env.SandeshGenPy('pysandesh/test/encode_decode_test.sandesh', PYSANDESH_TEST_PATH)
-gen_test_pkg += env.SandeshGenPy('pysandesh/test/msg_test.sandesh', PYSANDESH_TEST_PATH)
-gen_test_pkg += env.SandeshGenPy('pysandesh/test/sandesh_http_test.sandesh', PYSANDESH_TEST_PATH)
-gen_test_pkg += env.SandeshGenPy('pysandesh/test/uve_alarm_test.sandesh', PYSANDESH_TEST_PATH)
-gen_test_pkg += env.SandeshGenPy('#src/contrail-common/sandesh/library/common/sandesh_alarm_base.sandesh', PYSANDESH_TEST_PATH)
-gen_test_pkg += env.SandeshGenPy('#src/contrail-common/base/sandesh/nodeinfo.sandesh', PYSANDESH_TEST_PATH)
-gen_test_pkg += env.SandeshGenPy('#src/contrail-common/base/sandesh/process_info.sandesh', PYSANDESH_TEST_PATH + 'gen_py/nodeinfo/', False)
-gen_test_pkg += env.SandeshGenPy('#src/contrail-common/base/sandesh/cpuinfo.sandesh', PYSANDESH_TEST_PATH + 'gen_py/nodeinfo/', False)
-env.Depends(test_modules_rules, gen_test_pkg)
-
+test_path = base_path + 'test/'
+gen_test_pkg = env.SandeshGenPy('pysandesh/test/encode_decode_test.sandesh', test_path)
+gen_test_pkg += env.SandeshGenPy('pysandesh/test/msg_test.sandesh', test_path)
+gen_test_pkg += env.SandeshGenPy('pysandesh/test/sandesh_http_test.sandesh', test_path)
+gen_test_pkg += env.SandeshGenPy('pysandesh/test/uve_alarm_test.sandesh', test_path)
+gen_test_pkg += env.SandeshGenPy('#src/contrail-common/sandesh/library/common/sandesh_alarm_base.sandesh', test_path)
+gen_test_pkg += env.SandeshGenPy('#src/contrail-common/base/sandesh/nodeinfo.sandesh', test_path)
+gen_test_pkg += env.SandeshGenPy('#src/contrail-common/base/sandesh/process_info.sandesh', test_path + 'gen_py/nodeinfo/', False)
+gen_test_pkg += env.SandeshGenPy('#src/contrail-common/base/sandesh/cpuinfo.sandesh', test_path + 'gen_py/nodeinfo/', False)
 
 sdist_depends = [
-    local_modules_rules, web_srv_rules,
-    pysandesh_modules_rules, transport_modules_rules,
-    protocol_modules_rules, sandesh_hdr_pkg,
-    sandesh_ctrl_pkg, sandesh_uve_pkg,
+    sandesh_hdr_pkg, sandesh_ctrl_pkg, sandesh_uve_pkg,
     sandesh_alarm_pkg, sandesh_trace_pkg,
-    io_pkg, ds_pkg, process_info_pkg, test_modules_rules,
-    requirement_modules_rules]
+    io_pkg, ds_pkg, process_info_pkg, gen_test_pkg]
 
-
-print("DBG:", 'dist/sandesh-%s.tar.gz' % env.GetPyVersion(), Dir('.').path)
 sdist_gen = env.Command(
-    'dist/sandesh-%s.tar.gz' % env.GetPyVersion(),
-    'setup.py',
-    'cd ' + Dir('.').path + ' && python3 setup.py sdist')
-
-# install everything before building distribution
+    '/pip/sandesh-0.1.dev0-py3-none-any.whl', 'setup.py',
+    'cd ' + Dir('#src/contrail-common/sandesh/library/python').path + ' && python3 setup.py bdist_wheel --dist-dir /pip')
 env.Depends(sdist_gen, sdist_depends)
-
-env.Default(sdist_gen)
+env.Alias('install', sdist_gen)
 env.Alias('sandesh/library/python:pysandesh', sdist_gen)
-env.Alias('sandesh/library/python:sdist', sdist_gen)
-env.Alias('nodemgr-full', sdist_gen)
 
-def SymLink(target, source, env):
-    os.symlink(os.path.abspath(str(source[0])), os.path.abspath(str(target[0])))
-
-if 'install' in BUILD_TARGETS:
-    install_whl_cmd = env.Command(
-        None, 'setup.py',
-        'cd ' + Dir('.').path + ' && python3 setup.py bdist_wheel --dist-dir /pip')
-    env.Depends(install_whl_cmd, sdist_depends)
-    env.Alias('install', install_whl_cmd)
-
-test_target = env.SetupPyTestSuite(sdist_gen, use_tox=True)
-env.Alias('sandesh:pytest', test_target)
-Return('test_target')
+env.SetupPyTestSuiteWithDeps(sdist_depends, top_dir=base_path)

@@ -9,49 +9,7 @@ import os
 Import('BuildEnv')
 PartEnv = BuildEnv.Clone()
 
-setup_sources = [
-    'setup.py',
-    'MANIFEST.in',
-    'requirements.txt'
-]
-
-setup_sources_rules = []
-for file in setup_sources:
-    setup_sources_rules.append(
-        PartEnv.Install(Dir("."), '#src/contrail-common/libpartition/' + file))
-
-local_sources = [
-    '__init__.py',
-    'libpartition.py',
-    'consistent_hash.py',
-    'consistent_schdlr.py',
-]
-
-local_sources_rules = []
-for file in local_sources:
-    local_sources_rules.append(
-        PartEnv.Install("libpartition", "#src/contrail-common/libpartition/libpartition/" + file))
-
-sdist_depends = [setup_sources_rules, local_sources_rules]
-
-cd_cmd = 'cd ' + Dir('.').path + ' && '
 sdist_gen = PartEnv.Command(
-    'dist/libpartition-%s.tar.gz' % PartEnv.GetPyVersion(),
-    'setup.py',
-    cd_cmd + 'python3 setup.py sdist')
-# install everything before building distribution
-PartEnv.Depends(sdist_gen, sdist_depends)
-
-def SymLink(target, source, env):
-    os.symlink(os.path.abspath(str(source[0])), os.path.abspath(str(target[0])))
-
-if 'install' in BUILD_TARGETS:
-    install_whl_cmd = PartEnv.Command(
-        None, sdist_depends,
-        cd_cmd + 'python3 setup.py bdist_wheel --dist-dir /pip')
-    PartEnv.Alias('install', install_whl_cmd)
-
-PartEnv['LIBPARTITION_PKG'] = sdist_gen
-
-PartEnv.Default(sdist_gen)
-PartEnv.Alias("contrail:libpartition", sdist_gen)
+    '/pip/libpartition-0.1.dev0-py3-none-any.whl', 'setup.py',
+    'cd ' + Dir('#src/contrail-common/libpartition').path + ' && ' + 'python3 setup.py bdist_wheel --dist-dir /pip')
+PartEnv.Alias('install', sdist_gen)
