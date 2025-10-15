@@ -109,7 +109,7 @@ SandeshHttpTestRequest::HandleRequest() const{
         shtp->set_param(param);
         shtp->set_context(context());
         shtp->Response();
-        break;      
+        break;
     }
     case (5):
     case (6):
@@ -118,6 +118,13 @@ SandeshHttpTestRequest::HandleRequest() const{
         ASSERT_STREQ(teststring2.c_str(), currentTestString2.c_str());
         ASSERT_EQ(testIpaddr1, currentTestIpaddr1);
         ASSERT_EQ(testUuid1, currentTestUuid1);
+        EXPECT_TRUE(__isset.testId);
+        if (testId != 7) {
+            EXPECT_TRUE(__isset.param);
+        } else {
+            EXPECT_FALSE(__isset.param);
+        }
+        EXPECT_FALSE(__isset.optparam);
         SandeshHttpTestResp *shtp = new SandeshHttpTestResp();
         shtp->set_testId(testId);
         shtp->set_param(param);

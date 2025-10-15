@@ -11,12 +11,14 @@
 struct VNSRoute {
         1: i32                           prefix;
         2: string                        desc;
+        3: optional string               optparam;
 }
 
 response sandesh VNSwitchRouteResp {
        2: i32                           vnId;
        3: list<VNSRoute>                vnRoutes;
        4: VNSRoute                      vnMarkerRoute;
+       5: optional string               optparam;
 }
 
 response sandesh SandeshHttpTestResp {
@@ -26,6 +28,7 @@ response sandesh SandeshHttpTestResp {
         4: string                       teststring2;
         5: ipaddr                       testIpaddr1;
         6: ct_uuid_t                    testUuid1;
+        7: optional string              optparam;
 }
 
 request sandesh SandeshHttpTestRequest {
@@ -35,4 +38,5 @@ request sandesh SandeshHttpTestRequest {
         4: string                       teststring2;
         5: ipaddr                       testIpaddr1;
         6: ct_uuid_t                    testUuid1;
+        7: optional string              optparam;
 }

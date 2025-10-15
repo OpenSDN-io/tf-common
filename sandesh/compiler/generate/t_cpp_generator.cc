@@ -3644,7 +3644,7 @@ void t_cpp_generator::generate_sandesh_http_reader(ofstream& out,
                 scope_up(out);
                 indent(out) << "unescaped = curl_easy_unescape(cr, (*it2).c_str(), 0, NULL);" << endl;
                 indent(out) << "tmpstr=unescaped;" << endl;
-                indent(out) << (*f_iter)->get_name() << " = boost::lexical_cast<std::string>((tmpstr));" << endl;
+                indent(out) << "set_" << (*f_iter)->get_name() << "(boost::lexical_cast<std::string>(tmpstr));" << endl;
                 indent(out) << "curl_free(unescaped);" << endl;
                 // delete[] unescaped;
                 indent(out) << "continue;" << endl;
@@ -3657,7 +3657,9 @@ void t_cpp_generator::generate_sandesh_http_reader(ofstream& out,
                 scope_up(out);
                 indent(out) << "std::stringstream ss;" << endl;
                 indent(out) << "ss << *it2;" << endl;
-                indent(out) << "ss >> " << (*f_iter)->get_name() << ";" << endl;
+                indent(out) << type_name((*f_iter)->get_type()) << " tmpval;" << endl;
+                indent(out) << "ss >> tmpval;" << endl;
+                indent(out) << "set_" << (*f_iter)->get_name() << "(tmpval);" << endl;
                 indent(out) << "continue;" << endl;
                 scope_down(out);
             }
@@ -3667,8 +3669,9 @@ void t_cpp_generator::generate_sandesh_http_reader(ofstream& out,
                 indent(out) << "if((tok_new.substr(0,(entity_name.length()))).compare(entity_name) == 0)" << endl;
                 scope_up(out);
                 indent(out) << "boost::system::error_code ec;" << endl;
-                indent(out) << (*f_iter)->get_name() <<
-                    " = boost::asio::ip::address::from_string((*it2), ec);" << endl;
+                indent(out) << type_name((*f_iter)->get_type()) << " tmpval;" << endl;
+                indent(out) << "tmpval = boost::asio::ip::address::from_string((*it2), ec);" << endl;
+                indent(out) << "set_" << (*f_iter)->get_name() << "(tmpval);" << endl;
                 indent(out) << "continue;" << endl;
                 scope_down(out);
             }
@@ -3678,7 +3681,9 @@ void t_cpp_generator::generate_sandesh_http_reader(ofstream& out,
                 indent(out) << "if((tok_new.substr(0,(entity_name.length()))).compare(entity_name) == 0)" << endl;
                 scope_up(out);
                 assert(btype->is_integer());
-                indent(out) << "stringToInteger((*it2), " << (*f_iter)->get_name() << ");" << endl;
+                indent(out) << type_name((*f_iter)->get_type()) << " tmpval;" << endl;
+                indent(out) << "stringToInteger((*it2), tmpval);" << endl;
+                indent(out) << "set_" << (*f_iter)->get_name() << "(tmpval);" << endl;
                 indent(out) << "continue;" << endl;
                 scope_down(out);
             }
@@ -3701,7 +3706,7 @@ void t_cpp_generator::generate_sandesh_http_reader(ofstream& out,
                 indent(out) << "entity_name=\""  << (*f_iter2)->get_name() << "\";" <<  endl;
                 indent(out) << "unescaped = curl_easy_unescape(cr, (*it2).c_str(), 0, NULL);" << endl;
                 indent(out) << "tmpstr=unescaped;" << endl;
-                indent(out) << (*f_iter2)->get_name() << " = boost::lexical_cast<std::string>((tmpstr));" << endl;
+                indent(out) << "set_" << (*f_iter2)->get_name() << "(boost::lexical_cast<std::string>(tmpstr));" << endl;
                 indent(out) << "curl_free(unescaped);" << endl;
                 indent(out) << "continue;" << endl;
 
@@ -3711,22 +3716,27 @@ void t_cpp_generator::generate_sandesh_http_reader(ofstream& out,
                 indent(out) << "entity_name=\""  << (*f_iter2)->get_name() << "\";" <<  endl;
                 indent(out) << "std::stringstream ss;" << endl;
                 indent(out) << "ss << *it2;" << endl;
-                indent(out) << "ss >> " << (*f_iter2)->get_name() << ";" << endl;
+                indent(out) << type_name((*f_iter2)->get_type()) << " tmpval;" << endl;
+                indent(out) << "ss >> tmpval;" << endl;
+                indent(out) << "set_" << (*f_iter2)->get_name() << "(tmpval);" << endl;
                 indent(out) << "continue;" << endl;
             }
             else if (btype->is_ipaddr())
             {
                 indent(out) << "entity_name=\""  << (*f_iter2)->get_name() << "\";" <<  endl;
                 indent(out) << "boost::system::error_code ec;" << endl;
-                indent(out) << (*f_iter2)->get_name() <<
-                    " = boost::asio::ip::address::from_string((*it2), ec);" << endl;
+                indent(out) << type_name((*f_iter2)->get_type()) << " tmpval;" << endl;
+                indent(out) << "tmpval = boost::asio::ip::address::from_string((*it2), ec);" << endl;
+                indent(out) << "set_" << (*f_iter2)->get_name() << "(tmpval);" << endl;
                 indent(out) << "continue;" << endl;
             }
             else
             {
                 indent(out) << "entity_name=\""  << (*f_iter2)->get_name() << "\";" <<  endl;
                 assert(btype->is_integer());
-                indent(out) << "stringToInteger((*it2), " << (*f_iter2)->get_name() << ");" << endl;
+                indent(out) << type_name((*f_iter2)->get_type()) << " tmpval;" << endl;
+                indent(out) << "stringToInteger((*it2), tmpval);" << endl;
+                indent(out) << "set_" << (*f_iter2)->get_name() << "(tmpval);" << endl;
                 indent(out) << "continue;" << endl;
             }
         }
