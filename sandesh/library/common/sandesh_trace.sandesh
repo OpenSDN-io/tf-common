@@ -52,6 +52,7 @@ request sandesh SandeshTraceEnableDisableReq {
 }
 
 response sandesh SandeshTraceEnableDisableRes {
+    /** informs whether sandesh tracing is enabled or disabled */
     1: string enable_disable_status;
 }
 
@@ -63,8 +64,12 @@ request sandesh SandeshTraceBufStatusReq {
 }
 
 struct SandeshTraceBufStatusInfo {
+    /** the name of a buffer to query for its status */
     1: string trace_buf_name  (link="SandeshTraceRequest");
+    /** contains a string describing the status of the trace buffer */
     2: string enable_disable;
+    /** the value of the trace buffer length */
+    3: u32 buffer_length;
 }
 
 response sandesh SandeshTraceBufStatusRes {
@@ -83,5 +88,6 @@ request sandesh SandeshTraceBufferEnableDisableReq {
 }
 
 response sandesh SandeshTraceBufferEnableDisableRes {
+    /** contains a string describing the status of the trace buffer */
     1: string enable_disable_status;
 }
