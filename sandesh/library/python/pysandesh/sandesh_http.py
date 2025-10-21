@@ -85,7 +85,7 @@ class SandeshHttp(object):
         self._std_log = SandeshStdLog("Introspect", self._http_port)
 
         try:
-            imp_pysandesh = __import__('pysandesh')
+            imp_pysandesh = importlib.import_module('pysandesh')
         except ImportError:
             self._logger.error('Failed to import "pysandesh"')
         else:
@@ -275,7 +275,7 @@ class SandeshHttp(object):
 
     def _extract_http_requests(self, package):
         try:
-            imp_pkg = __import__(package)
+            imp_pkg = importlib.import_module(package.split('.')[0])
         except ImportError:
             self._logger.error('Failed to import package "%s"' % (package))
         else:

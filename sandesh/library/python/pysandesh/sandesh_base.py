@@ -826,7 +826,7 @@ class Sandesh(object):
 
     def _create_sandesh_request_and_uve_lists(self, package):
         try:
-            imp_pkg = __import__(package)
+            imp_pkg = importlib.import_module(package.split('.')[0])
         except ImportError:
             self._logger.error('Failed to import package "%s"' % (package))
         else:
