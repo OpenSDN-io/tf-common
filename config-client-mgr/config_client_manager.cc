@@ -14,9 +14,6 @@
 #include "config_amqp_client.h"
 #include "config_db_client.h"
 #include "config_cassandra_client.h"
-#ifdef CONTRAIL_ETCD_INCL
-#include "config_etcd_client.h"
-#endif
 #include "config_client_log.h"
 #include "config_client_log_types.h"
 #include "config_client_show_types.h"
@@ -112,13 +109,7 @@ void ConfigClientManager::SetUp(ConfigJsonParserBase *cfg_json_base) {
     config_json_parser_->Init(this);
     thread_count_ = GetNumConfigReader();
     end_of_rib_computed_at_ = UTCTimestampUsec();
-    if (config_options_.config_db_use_etcd) {
-#ifdef CONTRAIL_ETCD_INCL
-        config_db_client_.reset(ConfigStaticObjectFactory::Create<ConfigEtcdClient>
-                                (this, evm_, config_options_,
-                                 thread_count_));
-#endif
-    } else {
+    if (!config_options_.config_db_use_etcd) {
         config_db_client_.reset(
                 ConfigStaticObjectFactory::CreateRef<ConfigCassandraClient>(
                     this,
@@ -246,13 +237,7 @@ void ConfigClientManager::PostShutdown() {
     // Create new config db client and amqp client
     // Delete of config db client object guarantees the flusing of
     // object uuid cache and uuid read request list.
-    if (config_options_.config_db_use_etcd) {
-#ifdef CONTRAIL_ETCD_INCL
-        config_db_client_.reset(ConfigStaticObjectFactory::Create<ConfigEtcdClient>
-                                (this, evm_, config_options_,
-                                 thread_count_));
-#endif
-    } else {
+    if (!config_options_.config_db_use_etcd) {
         config_db_client_.reset(ConfigStaticObjectFactory::
             CreateRef<ConfigCassandraClient>(
                 this,
@@ -292,13 +277,7 @@ bool ConfigClientManager::InitConfigClient() {
         PostShutdown();
     }
     // Common code path for both init/reinit
-    if (config_options_.config_db_use_etcd) {
-#ifdef CONTRAIL_ETCD_INCL
-        CONFIG_CLIENT_DEBUG(ConfigClientMgrDebug,
-            "Config Client Mgr SM: Start ETCD Watcher");
-        config_db_client_->StartWatcher();
-#endif
-    } else {
+    if (!config_options_.config_db_use_etcd) {
         CONFIG_CLIENT_DEBUG(ConfigClientMgrDebug,
             "Config Client Mgr SM: Start RabbitMqReader and init Database");
         config_amqp_client_->StartRabbitMQReader();
