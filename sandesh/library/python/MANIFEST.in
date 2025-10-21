@@ -3,6 +3,5 @@
 #
 
 recursive-include pysandesh *
-recursive-exclude pysandesh/example *
 include requirements.txt
 include test-requirements.txt
