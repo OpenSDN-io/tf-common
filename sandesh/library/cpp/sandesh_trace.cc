@@ -185,6 +185,7 @@ void SandeshTraceBufStatusReq::HandleRequest() const {
             trace_buf_status.set_enable_disable("Disabled");
         }
         trace_buf_status_list.push_back(trace_buf_status);
+	trace_buf_status.set_buffer_length(SandeshTraceBufferSizeGet(tbp));
     }
     SandeshTraceBufStatusRes *resp = new SandeshTraceBufStatusRes;
     resp->set_trace_buf_status_list(trace_buf_status_list);
