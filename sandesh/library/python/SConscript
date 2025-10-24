@@ -45,8 +45,11 @@ sdist_depends = [
     sandesh_alarm_pkg, sandesh_trace_pkg,
     io_pkg, ds_pkg, process_info_pkg, gen_test_pkg]
 
+sources = ['setup.py', 'requirements.txt']
+sources += env.AddPythonSources('pysandesh', excludes=['test', 'gen_py'])
+
 sdist_gen = env.Command(
-    '/pip/sandesh-0.1.dev0-py3-none-any.whl', 'setup.py',
+    '/pip/sandesh-0.1.dev0-py3-none-any.whl', sources,
     'cd ' + Dir('#src/contrail-common/sandesh/library/python').path + ' && python3 setup.py bdist_wheel --dist-dir /pip')
 env.Depends(sdist_gen, sdist_depends)
 env.Alias('install', sdist_gen)
