@@ -134,6 +134,7 @@ BuildEnv.Install(BuildEnv['TOP_INCLUDE'] + '/bgp', '#controller/src/bgp/communit
 BuildEnv.Install(BuildEnv['TOP_INCLUDE'] + '/bgp', '#controller/src/bgp/bgp_route.h')
 BuildEnv.Install(BuildEnv['TOP_INCLUDE'] + '/bgp', '#controller/src/bgp/bgp_path.h')
 BuildEnv.Install(BuildEnv['TOP_INCLUDE'] + '/bgp/extended-community', '#controller/src/bgp/extended-community/types.h')
+BuildEnv.Install(BuildEnv['TOP_INCLUDE'] + '/bgp/large-community', '#controller/src/bgp/large-community/types.h')
 BuildEnv.Install(BuildEnv['TOP_INCLUDE'] + '/bgp/inet', '#controller/src/bgp/inet/inet_route.h')
 BuildEnv.Install(BuildEnv['TOP_INCLUDE'] + '/bgp/l3vpn', '#controller/src/bgp/l3vpn/inetvpn_address.h')
 #controller/src/net
