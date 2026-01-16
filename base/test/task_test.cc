@@ -1157,10 +1157,10 @@ TEST_F(TestUT, test8_0)
     TestInit(26, 3, task_seq_expected);
 
     scheduler->Enqueue(task_ptr[0]);
-    EXPECT_EQ(Task::RUN, task_ptr[0]->GetState());
+    EXPECT_EQ(Task::RUN, task_ptr[0]->state());
     EXPECT_EQ(TaskScheduler::QUEUED, scheduler->Cancel(task_ptr[0]));
     scheduler->Enqueue(task_ptr[1]);
-    EXPECT_EQ(Task::INIT, task_ptr[2]->GetState());
+    EXPECT_EQ(Task::INIT, task_ptr[2]->state());
     EXPECT_EQ(TaskScheduler::FAILED, scheduler->Cancel(task_ptr[2]));
     delete task_ptr[2];
 
@@ -1177,7 +1177,7 @@ TEST_F(TestUT, test8_1)
     TestInit(27, 3, task_seq_expected);
 
     scheduler->Enqueue(task_ptr[0]);
-    EXPECT_EQ(Task::RUN, task_ptr[0]->GetState());
+    EXPECT_EQ(Task::RUN, task_ptr[0]->state());
     EXPECT_EQ(TaskScheduler::QUEUED, scheduler->Cancel(task_ptr[0]));
     scheduler->Enqueue(task_ptr[1]);
     
@@ -1217,15 +1217,15 @@ TEST_F(TestUT, test8_2)
     scheduler->Enqueue(task_ptr[5]);
     scheduler->Enqueue(task_ptr[6]);
     scheduler->Enqueue(task_ptr[7]);
-    EXPECT_EQ(Task::WAIT, task_ptr[2]->GetState());
+    EXPECT_EQ(Task::WAIT, task_ptr[2]->state());
     EXPECT_EQ(TaskScheduler::CANCELLED, scheduler->Cancel(task_ptr[2]));
-    EXPECT_EQ(Task::WAIT, task_ptr[5]->GetState());
+    EXPECT_EQ(Task::WAIT, task_ptr[5]->state());
     EXPECT_EQ(TaskScheduler::CANCELLED, scheduler->Cancel(task_ptr[5]));
-    EXPECT_EQ(Task::WAIT, task_ptr[1]->GetState());
+    EXPECT_EQ(Task::WAIT, task_ptr[1]->state());
     EXPECT_EQ(TaskScheduler::CANCELLED, scheduler->Cancel(task_ptr[1]));
-    EXPECT_EQ(Task::WAIT, task_ptr[4]->GetState());
+    EXPECT_EQ(Task::WAIT, task_ptr[4]->state());
     EXPECT_EQ(TaskScheduler::CANCELLED, scheduler->Cancel(task_ptr[4]));
-    EXPECT_EQ(Task::WAIT, task_ptr[7]->GetState());
+    EXPECT_EQ(Task::WAIT, task_ptr[7]->state());
     EXPECT_EQ(TaskScheduler::CANCELLED, scheduler->Cancel(task_ptr[7]));
 
     TestWait(10);

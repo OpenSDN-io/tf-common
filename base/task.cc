@@ -142,9 +142,16 @@ public:
     /// of TaskEntry in the deferq_.
     boost::optional<uint64_t> GetTaskDeferEntrySeqno() const;
 
-    int GetTaskId() const { return task_id_; }
-    int GetTaskInstance() const { return task_instance_; }
+    /// @brief Returns the code ID of this task entry
+    int task_code_id() const { return task_code_id_; }
+
+    /// @brief Returns the data ID of this task entry
+    int task_data_id() const { return task_data_id_; }
+
+    /// @brief Returns the count of runs for this task entry
     int GetRunCount() const { return run_count_; }
+
+    /// @brief Disables this task entry
     void SetDisable(bool disable) { disable_ = disable; }
     bool IsDisabled() { return disable_; }
     void GetSandeshData(SandeshTaskEntry *resp) const;
@@ -169,8 +176,8 @@ private:
     typedef boost::intrusive::set<TaskEntry, TaskDeferListOption,
         boost::intrusive::compare<TaskDeferEntryCmp> > TaskDeferList;
 
-    int             task_id_;
-    int             task_instance_;
+    int             task_code_id_;
+    int             task_data_id_;
 
     /// @brief No. of tasks running
     int             run_count_;
@@ -277,7 +284,7 @@ public:
     bool IsDisabled() { return disable_; }
     void GetSandeshData(SandeshTaskGroup *resp, bool summary) const;
 
-    int task_id() const { return task_id_; }
+    int task_id() const { return task_code_id_; }
     size_t deferq_size() const { return deferq_.size(); }
     size_t num_tasks() const {
         size_t count = 0;
@@ -307,7 +314,7 @@ private:
         boost::intrusive::compare<TaskDeferEntryCmp> > TaskDeferList;
 
     static const int        kVectorGrowSize = 16;
-    int                     task_id_;
+    int                     task_code_id_;
 
     /// @brief Specifies if policy is already set
     bool                    policy_set_;
@@ -345,7 +352,7 @@ private:
 tbb::task *TaskImpl::execute() {
     TaskInfo::reference running = task_running.local();
     running = parent_;
-    parent_->SetTbbState(Task::TBB_EXEC);
+    parent_->tbb_state(Task::TBB_EXEC);
     try {
         uint64_t t = 0;
         if (parent_->enqueue_time() != 0) {
@@ -369,15 +376,15 @@ tbb::task *TaskImpl::execute() {
             }
             if (scheduler->track_run_time()) {
                 TaskGroup *group =
-                    scheduler->QueryTaskGroup(parent_->GetTaskId());
+                    scheduler->QueryTaskGroup(parent_->task_code_id());
                 group->IncrementTotalRunTime(delay);
             }
         }
         running = NULL;
         if (is_complete == true) {
-            parent_->SetTaskComplete();
+            parent_->set_task_complete();
         } else {
-            parent_->SetTaskRecycle();
+            parent_->set_task_recycle();
         }
     } catch (std::exception &e) {
 
@@ -614,16 +621,15 @@ void TaskScheduler::SetPolicy(int task_id, TaskPolicy &policy) {
     TaskEntry *group_entry = group->GetTaskEntry(-1);
     group->PolicySet();
 
-    for (TaskPolicy::iterator it = policy.begin(); it != policy.end(); ++it) {
-
-        if (it->match_instance == -1) {
-            TaskGroup *policy_group = GetTaskGroup(it->match_id);
+    for (const auto& pol_item: policy) {
+        if (pol_item.match_data_id == -1) {
+            TaskGroup *policy_group = GetTaskGroup(pol_item.match_code_id);
             group->AddPolicy(policy_group);
             policy_group->AddPolicy(group);
         } else {
-            TaskEntry *entry = GetTaskEntry(task_id, it->match_instance);
-            TaskEntry *policy_entry = GetTaskEntry(it->match_id,
-                                                   it->match_instance);
+            TaskEntry *entry = GetTaskEntry(task_id, pol_item.match_data_id);
+            TaskEntry *policy_entry = GetTaskEntry(pol_item.match_code_id,
+                                                   pol_item.match_data_id);
             entry->AddPolicy(policy_entry);
             policy_entry->AddPolicy(entry);
 
@@ -644,15 +650,15 @@ void TaskScheduler::EnqueueUnLocked(Task *t) {
         t->enqueue_time_ = ClockMonotonicUsec();
     }
     // Ensure that task is enqueued only once.
-    assert(t->GetSeqno() == 0);
+    assert(t->seqno() == 0);
     enqueue_count_++;
-    t->SetSeqNo(++seqno_);
-    TaskGroup *group = GetTaskGroup(t->GetTaskId());
+    t->seqno(++seqno_);
+    TaskGroup *group = GetTaskGroup(t->task_code_id());
     t->schedule_delay_ = group->schedule_delay_;
     t->execute_delay_ = group->execute_delay_;
     group->stats_.enqueue_count_++;
 
-    TaskEntry *entry = GetTaskEntry(t->GetTaskId(), t->GetTaskInstance());
+    TaskEntry *entry = GetTaskEntry(t->task_code_id(), t->task_data_id());
     entry->stats_.enqueue_count_++;
     // If either TaskGroup or TaskEntry is disabled for Unit-Test purposes,
     // enqueue new task in waitq and update TaskGroup if needed.
@@ -703,8 +709,8 @@ TaskScheduler::CancelReturnCode TaskScheduler::Cancel(Task *t) {
     if (t->state_ == Task::RUN) {
         t->task_cancel_ = true;
     } else if (t->state_ == Task::WAIT) {
-        TaskEntry *entry = QueryTaskEntry(t->GetTaskId(), t->GetTaskInstance());
-        TaskGroup *group = QueryTaskGroup(t->GetTaskId());
+        TaskEntry *entry = QueryTaskEntry(t->task_code_id(), t->task_data_id());
+        TaskGroup *group = QueryTaskGroup(t->task_code_id());
         assert(entry->WaitQSize());
         // Get the first entry in the waitq_
         Task *first_wait_task = &(*entry->waitq_.begin());
@@ -763,9 +769,9 @@ void TaskScheduler::OnTaskExit(Task *t) {
     tbb::mutex::scoped_lock lock(mutex_);
     done_count_++;
 
-    t->SetTbbState(Task::TBB_DONE);
-    TaskEntry *entry = QueryTaskEntry(t->GetTaskId(), t->GetTaskInstance());
-    entry->TaskExited(t, GetTaskGroup(t->GetTaskId()));
+    t->tbb_state(Task::TBB_DONE);
+    TaskEntry *entry = QueryTaskEntry(t->task_code_id(), t->task_data_id());
+    entry->TaskExited(t, GetTaskGroup(t->task_code_id()));
 
     //
     // Delete the task it is not marked for recycling or already cancelled.
@@ -783,9 +789,9 @@ void TaskScheduler::OnTaskExit(Task *t) {
 
     // Task is being recycled, reset the state, seq_no and TBB task handle
     t->task_impl_ = NULL;
-    t->SetSeqNo(0);
-    t->SetState(Task::INIT);
-    t->SetTbbState(Task::TBB_INIT);
+    t->seqno(0);
+    t->state(Task::INIT);
+    t->tbb_state(Task::TBB_INIT);
     EnqueueUnLocked(t);
 }
 
@@ -1053,7 +1059,7 @@ void TaskScheduler::EnableTaskEntry(int task_id, int instance_id) {
 // Implementation for class TaskGroup
 ////////////////////////////////////////////////////////////////////////////
 
-TaskGroup::TaskGroup(int task_id) : task_id_(task_id), policy_set_(false),
+TaskGroup::TaskGroup(int task_id) : task_code_id_(task_id), policy_set_(false),
     run_count_(0), execute_delay_(0), schedule_delay_(0), disable_(false) {
     total_run_time_ = 0;
     task_entry_db_.resize(TaskGroup::kVectorGrowSize);
@@ -1092,7 +1098,7 @@ TaskEntry *TaskGroup::GetTaskEntry(int task_instance) {
 
     TaskEntry *entry = task_entry_db_.at(task_instance);
     if (entry == NULL) {
-        entry = new TaskEntry(task_id_, task_instance);
+        entry = new TaskEntry(task_code_id_, task_instance);
         task_entry_db_[task_instance] = entry;
     }
 
@@ -1260,8 +1266,8 @@ TaskStats *TaskGroup::GetTaskStats(int task_instance) {
 // Implementation for class TaskEntry
 ////////////////////////////////////////////////////////////////////////////
 
-TaskEntry::TaskEntry(int task_id, int task_instance) : task_id_(task_id),
-    task_instance_(task_instance), run_count_(0), run_task_(NULL),
+TaskEntry::TaskEntry(int task_id, int task_instance) : task_code_id_(task_id),
+    task_data_id_(task_instance), run_count_(0), run_task_(NULL),
     waitq_(), deferq_task_entry_(NULL), deferq_task_group_(NULL),
     disable_(false) {
     // When a new TaskEntry is created, adds an implicit rule into policyq_ to
@@ -1274,8 +1280,8 @@ TaskEntry::TaskEntry(int task_id, int task_instance) : task_id_(task_id),
     deferq_ = new TaskDeferList;
 }
 
-TaskEntry::TaskEntry(int task_id) : task_id_(task_id),
-    task_instance_(-1), run_count_(0), run_task_(NULL),
+TaskEntry::TaskEntry(int task_id) : task_code_id_(task_id),
+    task_data_id_(-1), run_count_(0), run_task_(NULL),
     deferq_task_entry_(NULL), deferq_task_group_(NULL), disable_(false) {
     memset(&stats_, 0, sizeof(stats_));
     // allocate memory for deferq
@@ -1322,12 +1328,12 @@ bool TaskEntry::DeferOnPolicyFail(Task *task) {
 }
 
 void TaskEntry::AddToWaitQ(Task *t) {
-    t->SetState(Task::WAIT);
+    t->state(Task::WAIT);
     stats_.wait_count_++;
     waitq_.push_back(*t);
 
     TaskScheduler *scheduler = TaskScheduler::GetInstance();
-    TaskGroup *group = scheduler->GetTaskGroup(task_id_);
+    TaskGroup *group = scheduler->GetTaskGroup(task_code_id_);
     group->stats_.wait_count_++;
 }
 
@@ -1352,7 +1358,7 @@ void TaskEntry::DeleteFromDeferQ(TaskEntry &entry) {
 
 void TaskEntry::RunTask (Task *t) {
     stats_.run_count_++;
-    if (t->GetTaskInstance() != -1) {
+    if (t->task_data_id() != -1) {
         assert(run_task_ == NULL);
         assert (run_count_ == 0);
         run_task_ = t;
@@ -1360,7 +1366,7 @@ void TaskEntry::RunTask (Task *t) {
 
     run_count_++;
     TaskScheduler *scheduler = TaskScheduler::GetInstance();
-    TaskGroup *group = scheduler->QueryTaskGroup(t->GetTaskId());
+    TaskGroup *group = scheduler->QueryTaskGroup(t->task_code_id());
     group->TaskStarted();
 
     t->StartTask(scheduler);
@@ -1372,7 +1378,7 @@ void TaskEntry::RunWaitQ() {
 
     TaskWaitQ::iterator it = waitq_.begin();
 
-    if (task_instance_ != -1) {
+    if (task_data_id_ != -1) {
         Task *t = &(*it);
         DeleteFromWaitQ(t);
         RunTask(t);
@@ -1395,7 +1401,7 @@ void TaskEntry::RunWaitQ() {
 
 void TaskEntry::RunDeferEntry() {
     TaskScheduler *scheduler = TaskScheduler::GetInstance();
-    TaskGroup *group = scheduler->GetTaskGroup(task_id_);
+    TaskGroup *group = scheduler->GetTaskGroup(task_code_id_);
 
     // Sanity check
     assert(waitq_.size());
@@ -1447,7 +1453,7 @@ void TaskEntry::RunDeferQForGroupEnable() {
 
 void TaskEntry::RunCombinedDeferQ() {
     TaskScheduler *scheduler = TaskScheduler::GetInstance();
-    TaskGroup *group = scheduler->QueryTaskGroup(task_id_);
+    TaskGroup *group = scheduler->QueryTaskGroup(task_code_id_);
     TaskDeferEntryCmp defer_entry_compare;
 
     TaskDeferList::iterator group_it = group->deferq_.begin();
@@ -1480,7 +1486,7 @@ void TaskEntry::RunCombinedDeferQ() {
 }
 
 void TaskEntry::TaskExited(Task *t, TaskGroup *group) {
-    if (task_instance_ != -1) {
+    if (task_data_id_ != -1) {
         assert(run_task_ == t);
         run_task_ = NULL;
         assert(run_count_ == 1);
@@ -1517,7 +1523,7 @@ TaskStats *TaskEntry::GetTaskStats() {
 boost::optional<uint64_t> TaskEntry::GetTaskDeferEntrySeqno() const {
     if(waitq_.size()) {
         const Task *task = &(*waitq_.begin());
-        return task->GetSeqno();
+        return task->seqno();
     }
 
     return boost::none;
@@ -1526,14 +1532,14 @@ boost::optional<uint64_t> TaskEntry::GetTaskDeferEntrySeqno() const {
 ////////////////////////////////////////////////////////////////////////////
 // Implementation for class Task
 ////////////////////////////////////////////////////////////////////////////
-Task::Task(int task_id, int task_instance) : task_id_(task_id),
-    task_instance_(task_instance), task_impl_(NULL), state_(INIT),
+Task::Task(int task_id, int task_instance) : task_code_id_(task_id),
+    task_data_id_(task_instance), task_impl_(NULL), state_(INIT),
     tbb_state_(TBB_INIT), seqno_(0), task_recycle_(false), task_cancel_(false),
     enqueue_time_(0), schedule_time_(0), execute_delay_(0), schedule_delay_(0) {
 }
 
-Task::Task(int task_id) : task_id_(task_id),
-    task_instance_(-1), task_impl_(NULL), state_(INIT), tbb_state_(TBB_INIT),
+Task::Task(int task_id) : task_code_id_(task_id),
+    task_data_id_(-1), task_impl_(NULL), state_(INIT), tbb_state_(TBB_INIT),
     seqno_(0), task_recycle_(false), task_cancel_(false), enqueue_time_(0),
     schedule_time_(0), execute_delay_(0), schedule_delay_(0) {
 }
@@ -1549,8 +1555,8 @@ void Task::StartTask(TaskScheduler *scheduler) {
         }
     }
     assert(task_impl_ == NULL);
-    SetState(RUN);
-    SetTbbState(TBB_ENQUEUED);
+    state(RUN);
+    tbb_state(TBB_ENQUEUED);
     task_impl_ = new (task::allocate_root())TaskImpl(this);
     if (scheduler->use_spawn()) {
         task::spawn(*task_impl_);
@@ -1565,7 +1571,7 @@ Task *Task::Running() {
 }
 
 ostream& operator<<(ostream& out, const Task &t) {
-    out <<  "Task <" << t.task_id_ << "," << t.task_instance_ << ":"
+    out <<  "Task <" << t.task_code_id_ << "," << t.task_data_id_ << ":"
         << t.seqno_ << "> ";
     return out;
 }
@@ -1574,7 +1580,7 @@ ostream& operator<<(ostream& out, const Task &t) {
 // Implementation for sandesh APIs for Task
 ////////////////////////////////////////////////////////////////////////////
 void TaskEntry::GetSandeshData(SandeshTaskEntry *resp) const {
-    resp->set_instance_id(task_instance_);
+    resp->set_instance_id(task_data_id_);
     resp->set_tasks_created(stats_.enqueue_count_);
     resp->set_total_tasks_completed(stats_.total_tasks_completed_);
     resp->set_tasks_running(run_count_);
@@ -1612,7 +1618,7 @@ void TaskGroup::GetSandeshData(SandeshTaskGroup *resp, bool summary) const {
     for (TaskGroupPolicyList::const_iterator it = policy_.begin();
          it != policy_.end(); ++it) {
         SandeshTaskPolicyEntry policy_entry;
-        policy_entry.set_task_name(scheduler->GetTaskName((*it)->task_id_));
+        policy_entry.set_task_name(scheduler->GetTaskName((*it)->task_code_id_));
         policy_entry.set_tasks_running((*it)->run_count_);
         policy_list.push_back(policy_entry);
     }

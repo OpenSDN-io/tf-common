@@ -23,6 +23,252 @@ class EventManager;
 class TaskMonitor;
 class TaskScheduler;
 
+/// @brief Task is a class to describe a computational task within OpenSDN
+/// control plane applications. A task is a labelled sequence of instructions
+/// (code) and data processed by them in a single thread. OpenSDN Task wraps
+/// over tbb::task. Tasks are labelled using a pair of numbers:
+/// - task code ID (or task ID), which corresponds to a version of code
+/// to run into the task;
+/// - task data ID, which corresponds to a version of data supplied
+/// to the task and processed by code.
+///
+/// This labelling is used to apply execution policies determining
+/// which tasks are allowed to be executed in parallel with others and
+/// which tasks are forbidden to run in parallel. The labels are expressed as
+/// <tcid, tdid>, where *tcid* is a task code ID and *tdid* is a task
+/// data ID.
+///
+/// If a task with *tcid* has *tdid* equal to -1, then any number of
+/// tasks with label <tcid,-1> can run at a time. If a task has task data ID
+/// larger or equal to 0, then only one task with this
+/// given label (i.e. <tcid,tdid>) can run at a time.
+///
+/// When there are multiple tasks ready to run, they are scheduled in their
+/// order of enqueue.
+///
+/// Additionaly, parallel execution of tasks can be managed using task
+/// execution policies.
+/// Task execution policies are specified per a task with the given code
+/// ID *tcid0* and arbitrary task data ID in a form of a list of task
+/// labels:
+/// <tcid0,-1> => <tcid1,tdid1>, <tcid2,tdid2>, ..., <tcidN,tdidN>.
+///
+/// This list specifies which tasks can't be executed in parallel with
+/// a task having specified task code ID (tcid0).
+/// Each label <tcidN, tdidN> in a policy (i.e. the list) is called task
+/// exclusion because it specifies that the task with this task code ID and
+/// task data ID cannot run in parallel with <tcid0, -1>.
+/// When *tdid* is equal to -1 in a task exclusion, it corresponds to
+/// wildcard (*), i.e. all possible values of the task data ID *tdid*.
+///
+/// For example, if we have a policy:
+/// - <tcid0,-1> => <tcid1, -1> <tcid2, 2> <tcid3, 3>
+///
+/// The policy states that:
+/// - Task <tcid0,-1> cannot run as long as <tcid1, -1> is running;
+/// - Task <tcid0, 2> cannot run as long as task <tcid2, 2> is running;
+/// - Task <tcid0, 3> cannot run as long as task <tcid3, 3> is running.
+///.
+/// Policy rules are symmetric. I.e., the previous example states also:
+/// - Task <tcid1,-1> cannot run as long as <tcid0,-1> is running;
+/// - Task <tcid2, 2> cannot run as long as task <tcid0, 2> is running;
+/// - Task <tcid3, 3> cannot run as long as task <tcid0, 3> is running.
+///
+class Task {
+public:
+
+    /// @brief Task states.
+    enum State {
+
+        /// @brief A task was initialized.
+        INIT,
+
+        /// @brief A task is waiting in a queue.
+        WAIT,
+
+        /// @brief A task is being run.
+        RUN
+    };
+
+    /// @brief Describes states of a task according to TBB library.
+    enum TbbState {
+        TBB_INIT,
+        TBB_ENQUEUED,
+        TBB_EXEC,
+        TBB_DONE
+    };
+
+    /// @brief Specifies value for wildcard (any or *) task data ID.
+    const static int kTaskInstanceAny = -1;
+
+    /// @brief Creates a new task with the given values of
+    /// task code ID and task data ID.
+    Task(int task_id, int task_data_id);
+
+
+    /// @brief Creates a new task with the given value of
+    /// task code ID and wildcard for task data ID.
+    Task(int task_id);
+
+    /// @brief Destroys a task
+    virtual ~Task() { };
+
+    /// @brief Code to execute in a task.
+    /// Returns true if task is completed. Return false to reschedule the task.
+    virtual bool Run() = 0;
+
+    /// @brief Called on task exit, if it is marked for cancellation.
+    /// If the user wants to do any cleanup on task cancellation,
+    /// then he/she can overload this function.
+    virtual void OnTaskCancel() { };
+
+    // Accessor methods
+
+    /// @brief Returns a state value of a task.
+    State state() const { return state_; };
+
+    /// @brief Returns the code ID of this task.
+    int task_code_id() const { return task_code_id_; };
+
+    /// @brief Returns the data ID of this task.
+    int task_data_id() const { return task_data_id_; };
+
+    /// @brief Returns the sequence number of this task.
+    uint64_t seqno() const { return seqno_; };
+
+    /// @brief Provides access to private members of a task for the
+    /// output stream redirection operator.
+    friend std::ostream& operator<<(std::ostream& out, const Task &task);
+
+    /// @brief Returns a pointer to the current task the code is executing
+    /// under.
+    static Task *Running();
+
+    /// @brief Returns true if the task has been canceled.
+    bool task_cancelled() const { return task_cancel_; };
+
+    /// @brief Gives a description of the task.
+    virtual std::string Description() const  = 0;
+
+    /// @brief Returns the time when the task was enqueued for execution.
+    uint64_t enqueue_time() const { return enqueue_time_; }
+    
+    /// @brief Returns the time when the task execution was started.
+    uint64_t schedule_time() const { return schedule_time_; }
+
+    /// @brief Returns the threshold for the task execution duration.
+    uint32_t execute_delay() const { return execute_delay_; }
+
+    /// @brief Returns the time threshold for time difference between
+    /// moments when the task was started and when it was enqueue.
+    uint32_t schedule_delay() const { return schedule_delay_; }
+
+private:
+
+    /// @brief Gives access to private members for TaskEntry class.
+    friend class TaskEntry;
+
+    /// @brief Gives access to private members for TaskScheduler class.
+    friend class TaskScheduler;
+
+    /// @brief Gives access to private members for TaskImpl class.
+    friend class TaskImpl;
+
+    /// @brief Sets sequence number of the task
+    void seqno(uint64_t seqno) {seqno_ = seqno;};
+
+    /// @brief Sets a TBB state for the task
+    void tbb_state(TbbState s) { tbb_state_ = s; };
+
+    /// @brief Sets a state for this task
+    void state(State s) { state_ = s; };
+
+    /// @brief Marks this task for recycle
+    void set_task_recycle() { task_recycle_ = true; };
+
+    /// @brief Marks this task as completed (forbids recycling)
+    void set_task_complete() { task_recycle_ = false; };
+
+    /// @brief Starts execution of a task.
+    void StartTask(TaskScheduler *scheduler);
+
+    /// @brief The code path executed by the task.
+    int                 task_code_id_;
+
+    /// @brief The dataset id within a code path.
+    int                 task_data_id_;
+
+    /// @brief A pointer to an Intel TBB object storing
+    /// low-level information to manage the task.
+    tbb::task           *task_impl_;
+
+    /// @brief Stores a state of the task.
+    State               state_;
+
+    /// @brief Stores a state of the TBB object.
+    TbbState            tbb_state_;
+
+    /// @brief Stores the sequence number.
+    uint64_t            seqno_;
+
+    /// @brief Determines if the task must be rescheduled (reused)
+    /// after its completion.
+    bool                task_recycle_;
+
+    /// @brief Determines if the task's execution was canceled.
+    bool                task_cancel_;
+
+    /// @brief Contains the time when the task was enqueued
+    /// for execution
+    uint64_t            enqueue_time_;
+
+    /// @brief Contains the time when the task was started.
+    uint64_t            schedule_time_;
+
+    /// @brief Sets threshold for the task's execution time.
+    /// If the threshold is exceeded, the event is logged.
+    uint32_t            execute_delay_;
+
+    /// @brief Sets threshold for delay between enqueueing and execution.
+    /// If the threshold is exceeded, the event is logged.
+    uint32_t            schedule_delay_;
+
+    // Hook in intrusive list for TaskEntry::waitq_
+    boost::intrusive::list_member_hook<> waitq_hook_;
+
+    DISALLOW_COPY_AND_ASSIGN(Task);
+};
+
+/// @brief The class is used to specify a Task label for formulating
+/// a task exclusion list (an execution policy).
+struct TaskExclusion {
+
+    /// @brief Creates a new task exclusion from the given task code ID value
+    /// and wildcard for task data ID.
+    TaskExclusion(int task_code_id)
+        : match_code_id(task_code_id), match_data_id(-1) {}
+
+    /// @brief Creates a new task exclusion from the given task code ID and
+    /// task data ID values.
+    TaskExclusion(int task_code_id, int task_data_id)
+        : match_code_id(task_code_id), match_data_id(task_data_id) {
+    }
+
+    /// @brief Specifies task code ID (must be a valid id >= 0)
+    /// for a task execution policy.
+    int match_code_id;
+
+    /// @brief  Specifies task data ID for a task execution policy.
+    /// The value of -1 corresponds to wildcard (any).
+    int match_data_id;
+};
+
+/// @brief Defines a type to store an execution policy (a list of
+/// task exclusions).
+typedef std::vector<TaskExclusion> TaskPolicy;
+
+/// The class is used to store various statistics associated with a
+/// task or group of tasks
 struct TaskStats {
 
     /// @brief Number of entries in waitq
@@ -42,128 +288,6 @@ struct TaskStats {
 
     ///@brief Number of time stamp of latest exist
     uint64_t last_exit_time_;
-};
-
-struct TaskExclusion {
-    TaskExclusion(int task_id) : match_id(task_id), match_instance(-1) {}
-    TaskExclusion(int task_id, int instance_id)
-        : match_id(task_id), match_instance(instance_id) {
-    }
-
-    /// @brief must be a valid id (>= 0).
-    int match_id;
-
-    /// @brief -1 (wildcard) or user specified id.
-    int match_instance;
-};
-typedef std::vector<TaskExclusion> TaskPolicy;
-
-/// @brief Task is a wrapper over tbb::task to support policies.
-///
-/// There are two kind of tasks,
-/// - <task-id, instance-id> specifies task with a given instance-id
-/// - <task-id> specifies task without any instance
-///.
-/// The policies can be specified in the form of,
-/// task(tid0) => <tid1, -1> <tid2, 2> <tid3, 3>
-/// The rule implies that:
-/// - Task <tid0, *> cannot run as long as <tid1, *> is running
-/// - Task <tid0, 2> cannot run as long as task <tid2, 2> is running
-/// - Task <tid0, 3> cannot run as long as task <tid3, 3> is running
-///.
-/// The policy rules are symmetric. That is:
-/// - Task <tid1, *> cannot run as long as <tid0, *> is running
-/// - Task <tid2, 2> cannot run as long as task <tid0, 2> is running
-/// - Task <tid3, 3> cannot run as long as task <tid0, 3> is running
-///.
-/// If task_instance == -1, means instance is not applicable.
-/// It implies that, any number of tasks with instance -1 can run at a time
-///
-/// If task_instance != -1, only one task of given instnace can run at a time
-///
-/// When there are multiple tasks ready to run, they are scheduled in their
-/// order of enqueue
-class Task {
-public:
-    /// @brief Task states
-    enum State {
-        INIT,
-        WAIT,
-        RUN
-    };
-
-    enum TbbState {
-        TBB_INIT,
-        TBB_ENQUEUED,
-        TBB_EXEC,
-        TBB_DONE
-    };
-
-    const static int kTaskInstanceAny = -1;
-    Task(int task_id, int task_instance);
-    Task(int task_id);
-    virtual ~Task() { };
-
-    /// @brief Code to execute.
-    /// Returns true if task is completed. Return false to reschedule the task
-    virtual bool Run() = 0;
-
-    /// @brief Called on task exit, if it is marked for cancellation.
-    /// If the user wants to do any cleanup on task cancellation,
-    /// then he/she can overload this function.
-    virtual void OnTaskCancel() { };
-
-    // Accessor methods
-    State GetState() const { return state_; };
-    int GetTaskId() const { return task_id_; };
-    int GetTaskInstance() const { return task_instance_; };
-    uint64_t GetSeqno() const { return seqno_; };
-    friend std::ostream& operator<<(std::ostream& out, const Task &task);
-
-    /// @brief Returns a pointer to the current task the code is executing
-    /// under.
-    static Task *Running();
-
-    bool task_cancelled() const { return task_cancel_; };
-    virtual std::string Description() const  = 0;
-
-    uint64_t enqueue_time() const { return enqueue_time_; }
-    uint64_t schedule_time() const { return schedule_time_; }
-    uint32_t execute_delay() const { return execute_delay_; }
-    uint32_t schedule_delay() const { return schedule_delay_; }
-
-private:
-    friend class TaskEntry;
-    friend class TaskScheduler;
-    friend class TaskImpl;
-    void SetSeqNo(uint64_t seqno) {seqno_ = seqno;};
-    void SetTbbState(TbbState s) { tbb_state_ = s; };
-    void SetState(State s) { state_ = s; };
-    void SetTaskRecycle() { task_recycle_ = true; };
-    void SetTaskComplete() { task_recycle_ = false; };
-
-    /// @brief Starts execution of a task.
-    void StartTask(TaskScheduler *scheduler);
-
-    /// @brief The code path executed by the task.
-    int                 task_id_;
-
-    /// @brief The dataset id within a code path.
-    int                 task_instance_;
-    tbb::task           *task_impl_;
-    State               state_;
-    TbbState            tbb_state_;
-    uint64_t            seqno_;
-    bool                task_recycle_;
-    bool                task_cancel_;
-    uint64_t            enqueue_time_;
-    uint64_t            schedule_time_;
-    uint32_t            execute_delay_;
-    uint32_t            schedule_delay_;
-    // Hook in intrusive list for TaskEntry::waitq_
-    boost::intrusive::list_member_hook<> waitq_hook_;
-
-    DISALLOW_COPY_AND_ASSIGN(Task);
 };
 
 /// @brief The TaskScheduler keeps track of what tasks are currently

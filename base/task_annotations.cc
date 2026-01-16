@@ -23,7 +23,7 @@ ConcurrencyChecker::ConcurrencyChecker() {
 void ConcurrencyChecker::Check() {
     Task *current = Task::Running();
     assert(current != NULL);
-    assert(id_set_.count(current->GetTaskId()) > 0);
+    assert(id_set_.count(current->task_code_id()) > 0);
 }
 
 void ConcurrencyChecker::CheckIfMainThr() {
