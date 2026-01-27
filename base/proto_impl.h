@@ -318,13 +318,13 @@ struct NopSetter {
 
 template <typename Derived>
 struct SizeComparer {
-    bool operator()(int size) {
+    bool operator()(int size) const {
         return size >= Derived::kSize;
     }
 };
 
 struct NopComparer {
-    bool operator()(int size) {
+    bool operator()(int size) const {
         return true;
     }
 };

@@ -858,7 +858,7 @@ int TaskScheduler::GetTaskId(const string &name) {
         // Grab read-only lock first. Most of the time, task-id already exists
         // in the id_map_. Hence there should not be any contention for lock
         // aquisition.
-        tbb::reader_writer_lock::scoped_lock_read lock(id_map_mutex_);
+        std::shared_lock<std::shared_mutex> lock(id_map_mutex_);
         TaskIdMap::iterator loc = id_map_.find(name);
         if (loc != id_map_.end()) {
             return loc->second;
@@ -866,7 +866,7 @@ int TaskScheduler::GetTaskId(const string &name) {
     }
 
     // Grab read-write lock to allocate a new task id and insert into the map.
-    tbb::reader_writer_lock::scoped_lock lock(id_map_mutex_);
+    std::unique_lock<std::shared_mutex> lock(id_map_mutex_);
     int tid = ++id_max_;
     id_map_.insert(make_pair(name, tid));
     return tid;

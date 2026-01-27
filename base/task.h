@@ -8,9 +8,11 @@
 #include <boost/scoped_ptr.hpp>
 #include <boost/intrusive/list.hpp>
 #include <map>
+#include <shared_mutex>
 #include <vector>
 #include <tbb/mutex.h>
-#include <tbb/reader_writer_lock.h>
+// TODO: change deprecated tbb::task to something else
+#define TBB_SUPPRESS_DEPRECATED_MESSAGES 1
 #include <tbb/task.h>
 #include <tbb/task_scheduler_init.h>
 #include "base/util.h"
@@ -368,7 +370,7 @@ private:
     uint64_t                seqno_;
     TaskGroupDb             task_group_db_;
 
-    tbb::reader_writer_lock id_map_mutex_;
+    std::shared_mutex       id_map_mutex_;
     TaskIdMap               id_map_;
     int                     id_max_;
 

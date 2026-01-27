@@ -369,7 +369,7 @@ const std::vector<string> SandeshClientStateMachineTest::collector_list2_ =
 
 typedef boost::function<void(void)> EvGen;
 struct EvGenComp {
-    bool operator()(const EvGen &lhs, const EvGen &rhs) { return &lhs < &rhs; }
+    bool operator()(const EvGen &lhs, const EvGen &rhs) const { return &lhs < &rhs; }
 };
 
 
