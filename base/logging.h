@@ -12,6 +12,7 @@
 
 #include <log4cplus/logger.h>
 #include <log4cplus/loggingmacros.h>
+#include <log4cplus/initializer.h>
 
 #ifdef __clang__
 #pragma clang diagnostic pop
@@ -36,6 +37,44 @@
         log4cplus::Logger logger = log4cplus::Logger::getRoot(); \
         LOG4CPLUS_##_Level(logger, _Msg);                        \
     } while (0)
+
+/// @brief A class providing basic control over logging capabilities
+/// in OpenSDN control plane.
+class Logging {
+
+    /// @brief A log4cplus object to maintain multi- and singlethreaded
+    /// execution of the logging library.
+    log4cplus::Initializer initializer_;
+
+public:
+
+    /// @brief Prepares log4cplus library for execution. Uses RAII
+    /// to free resources after the completion of the program.
+    Logging();
+
+    /// @brief Destroys the object and shutdowns the logging
+    /// system.
+    ~Logging();
+
+    /// @brief Performs basic initialization of the logging system (
+    /// log4cplus).
+    void Init();
+
+    /// @brief Performs customized initialization of the logging system (
+    /// log4cplus) using settings specified as the arguments of the
+    /// function.
+    void Init(const std::string &filename,
+              long maxFileSize,
+              int maxBackupIndex,
+              bool useSyslog,
+              const std::string &syslogFacility,
+              const std::string &ident,
+              log4cplus::LogLevel logLevel);
+
+    /// @brief Performs customized initialization of the logging system (
+    /// log4cplus) using settings specified in the provided file.
+    void Init(const std::string &propertyFile);
+};
 
 void LoggingInit();
 void LoggingInit(const std::string &filename,

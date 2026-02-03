@@ -21,6 +21,37 @@ static bool use_syslog_;
 static const char *loggingPattern = "%D{%Y-%m-%d %a %H:%M:%S:%Q %Z} "
                                     " %h [Thread %t, Pid %i]: %m%n";
 
+Logging::Logging()
+    : initializer_{} {
+}
+
+Logging::~Logging() {
+}
+
+void Logging::Init() {
+    LoggingInit();
+}
+
+void Logging::Init(const std::string &filename,
+                   long maxFileSize,
+                   int maxBackupIndex,
+                   bool useSyslog,
+                   const std::string &syslogFacility,
+                   const std::string &ident,
+                   log4cplus::LogLevel logLevel) {
+    LoggingInit(filename,
+                maxFileSize,
+                maxBackupIndex,
+                useSyslog,
+                syslogFacility,
+                ident,
+                logLevel);
+}
+
+void Logging::Init(const std::string &filename) {
+    LoggingInit(filename);
+}
+
 bool LoggingDisabled() {
     return disabled_;
 }
