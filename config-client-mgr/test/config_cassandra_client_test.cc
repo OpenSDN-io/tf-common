@@ -6,8 +6,6 @@
 #include <string>
 #include <vector>
 
-#include <tbb/mutex.h>
-
 #include "base/logging.h"
 #include "base/task_annotations.h"
 #include "base/test/task_test_util.h"
@@ -83,7 +81,7 @@ static const string fq_name_uuids[] = {
 };
 static size_t fq_names = sizeof(fq_name_uuids)/sizeof(fq_name_uuids[0]);
 
-static tbb::mutex mutex_;
+static std::mutex mutex_;
 static std::vector<std::string> given_uuids;
 static std::vector<std::string> received_uuids;
 static bool empty_fqnames_db;
@@ -172,7 +170,7 @@ public:
 
     GenDb::DbDataValueVec *GetTimeStamp() {
         GenDb::DbDataValueVec *ts = new GenDb::DbDataValueVec();
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         if (!timestamp_)
             timestamp_ = UTCTimestampUsec();
         ts->push_back(timestamp_);
@@ -224,7 +222,7 @@ public:
             string uuid = string(reinterpret_cast<const char *>(
                                  dname_blob.data()), dname_blob.size());
             {
-                tbb::mutex::scoped_lock lock(mutex_);
+                std::scoped_lock lock(mutex_);
                 given_uuids.push_back(uuid);
             }
         }
@@ -298,14 +296,14 @@ protected:
     }
 
     bool IsAllExpectedEntriesProcessed() {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         sort(given_uuids.begin(), given_uuids.end());
         sort(received_uuids.begin(), received_uuids.end());
         return received_uuids == given_uuids;
     }
 
     bool IsNoEntryProcessed() {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         return received_uuids.empty();
     }
 
@@ -316,7 +314,7 @@ protected:
     }
 
     void Clear() {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         given_uuids.clear();
         received_uuids.clear();
     }

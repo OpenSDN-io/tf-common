@@ -18,13 +18,12 @@ public:
     // Timer could have been cancelled or delete when task was enqueued
     virtual bool Run() {
         {
-            tbb::mutex::scoped_lock lock(timer_->mutex_);
+            std::unique_lock<std::mutex> lock(timer_->mutex_);
 
             // cancelled task .. ignore
             if (task_cancelled()) {
                 // Cancelled timer's task releases the ownership of the timer
-
-                lock.release();
+                lock.unlock();
                 timer_ = NULL;
                 return true;
             }
@@ -60,7 +59,7 @@ public:
         if (!timer_) {
             return;
         }
-        tbb::mutex::scoped_lock lock(timer_->mutex_);
+        std::scoped_lock lock(timer_->mutex_);
 
         if (timer_->timer_task_ != this) {
             assert(!timer_->timer_task_);
@@ -106,7 +105,7 @@ Timer::~Timer() {
 // If the timer is already running, return silently
 //
 bool Timer::Start(int time, Handler handler, ErrorHandler error_handler) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
 
     if (time < 0) {
         return true;
@@ -148,7 +147,7 @@ bool Timer::Reschedule(int time)
 
 // Cancel a running timer
 bool Timer::Cancel() {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
 
     // A fired timer cannot be cancelled
     if (state_ == Fired) {
@@ -171,7 +170,7 @@ bool Timer::Cancel() {
 // ASIO callback on timer expiry. Start a task to serve the timer
 void Timer::StartTimerTask(TimerPtr reference, int time, uint32_t seq_no,
                            const boost::system::error_code &ec) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
 
     if (state_ == Cancelled) {
         return;
@@ -196,7 +195,7 @@ void Timer::StartTimerTask(TimerPtr reference, int time, uint32_t seq_no,
 // TimerManager class routines
 //
 TimerManager::TimerSet TimerManager::timer_ref_;
-tbb::mutex TimerManager::mutex_;
+std::mutex TimerManager::mutex_;
 
 Timer *TimerManager::CreateTimer(
             boost::asio::io_context &service, const std::string &name,
@@ -208,7 +207,7 @@ Timer *TimerManager::CreateTimer(
 }
 
 void TimerManager::AddTimer(Timer *timer) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     timer_ref_.insert(TimerPtr(timer));
 
     return;
@@ -225,7 +224,7 @@ bool TimerManager::DeleteTimer(Timer *timer) {
     if (!timer->Cancel() && timer->IsDeleteOnCompletion())
         return false;
 
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     timer_ref_.erase(TimerPtr(timer));
 
     return true;
@@ -233,7 +232,7 @@ bool TimerManager::DeleteTimer(Timer *timer) {
 
 // Get timer's already elapsed time in milliseconds.
 int64_t Timer::GetElapsedTime() const {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     int64_t elapsed;
 
 #if __cplusplus >= 201103L

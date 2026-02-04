@@ -11,6 +11,8 @@
 #ifndef __SANDESH_SERVER_H__
 #define __SANDESH_SERVER_H__
 
+#include <mutex>
+
 #include <boost/asio.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/ptr_container/ptr_map.hpp>
@@ -90,7 +92,7 @@ private:
     boost::scoped_ptr<LifetimeManager> lifetime_manager_;
     boost::scoped_ptr<DeleteActor> deleter_;
     // Protect connection map and bmap
-    tbb::mutex mutex_;
+    std::mutex mutex_;
 
     DISALLOW_COPY_AND_ASSIGN(SandeshServer);
 };

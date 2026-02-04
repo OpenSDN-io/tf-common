@@ -5,12 +5,11 @@
 #ifndef SRC_IO_TCP_SESSION_H_
 #define SRC_IO_TCP_SESSION_H_
 
-#include <tbb/mutex.h>
-#include <tbb/task.h>
-
 #include <deque>
 #include <list>
 #include <string>
+#include <mutex>
+#include <atomic>
 
 #include <boost/asio/buffer.hpp>
 #include <boost/asio/io_service.hpp>
@@ -20,9 +19,6 @@
 #include <boost/function.hpp>
 #include <boost/scoped_ptr.hpp>
 
-#ifndef _LIBCPP_VERSION
-#include <tbb/compat/condition_variable>
-#endif
 #include "base/util.h"
 #include "base/task.h"
 #include "io/tcp_server.h"
@@ -118,12 +114,12 @@ public:
     }
 
     bool IsEstablished() const {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         return established_;
     }
 
     bool IsClosed() const {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         return closed_;
     }
 
@@ -222,7 +218,7 @@ protected:
     void TriggerAsyncReadHandler();
 
     // Protects session state and buffer queue.
-    mutable tbb::mutex mutex_;
+    mutable std::mutex mutex_;
     io::SocketStats stats_;
 
 protected:
@@ -274,27 +270,27 @@ private:
 
     // Protects observer manipulation and invocation. When this lock is
     // held the session mutex should not be held and vice-versa.
-    tbb::mutex obs_mutex_;
+    std::mutex obs_mutex_;
     EventObserver observer_;
 
     boost::scoped_ptr<TcpMessageWriter> writer_;
 
-    tbb::atomic<int> refcount_;
+    std::atomic<int> refcount_;
     std::string name_;
-    tbb::atomic<bool> defer_reader_;
+    std::atomic<bool> defer_reader_;
     std::string uve_key_str_;
-    tbb::atomic<bool> write_blocked_;
-    tbb::atomic<bool> tcp_close_in_progress_;
+    std::atomic<bool> write_blocked_;
+    std::atomic<bool> tcp_close_in_progress_;
 
     DISALLOW_COPY_AND_ASSIGN(TcpSession);
 };
 
 inline void intrusive_ptr_add_ref(TcpSession *session) {
-    session->refcount_.fetch_and_increment();
+    session->refcount_.fetch_add(1);
 }
 
 inline void intrusive_ptr_release(TcpSession *session) {
-    int prev = session->refcount_.fetch_and_decrement();
+    int prev = session->refcount_.fetch_sub(1);
     if (prev == 1) {
         delete session;
     }

@@ -5,8 +5,6 @@
 #ifndef SRC_IO_TCP_MESSAGE_WRITE_H_
 #define SRC_IO_TCP_MESSAGE_WRITE_H_
 
-#include <tbb/mutex.h>
-
 #include <list>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>

@@ -20,8 +20,8 @@ using namespace std;
 
 int HttpSession::req_handler_task_id_ = -1;
 HttpSession::map_type * HttpSession::context_map_ = 0;
-tbb::mutex HttpSession::map_mutex_;
-tbb::atomic<long> HttpSession::task_count_;
+std::mutex HttpSession::map_mutex_;
+std::atomic<long> HttpSession::task_count_;
 
 // Input processing context
 class HttpSession::RequestBuilder {
@@ -238,7 +238,7 @@ HttpSession::~HttpSession() {
 }
 
 void HttpSession::AcceptSession() {
-    tbb::mutex::scoped_lock lock(map_mutex_);
+    std::scoped_lock lock(map_mutex_);
     context_str_ = "http%" + ToString();
     GetMap()->insert(std::make_pair(context_str_, HttpSessionPtr(this)));
     HTTP_SYS_LOG("HttpSession", SandeshLevel::UT_INFO,
@@ -257,15 +257,16 @@ void HttpSession::OnSessionEvent(TcpSession *session,
     switch (event) {
     case TcpSession::CLOSE:
         {
-            tbb::mutex::scoped_lock lock(map_mutex_);
-            if (GetMap()->erase(h_session->context_str_)) {
-                HTTP_SYS_LOG("HttpSession", SandeshLevel::UT_INFO,
-                    "Removed Session " + h_session->context_str_);
-            } else {
-                HTTP_SYS_LOG("HttpSession", SandeshLevel::UT_INFO,
-                    "Not Removed Session " + h_session->context_str_);                
+            {
+                std::scoped_lock lock(map_mutex_);
+                if (GetMap()->erase(h_session->context_str_)) {
+                    HTTP_SYS_LOG("HttpSession", SandeshLevel::UT_INFO,
+                        "Removed Session " + h_session->context_str_);
+                } else {
+                    HTTP_SYS_LOG("HttpSession", SandeshLevel::UT_INFO,
+                        "Not Removed Session " + h_session->context_str_);                
+                }
             }
-            lock.release();
             h_session->context_str_ = "";
             HttpRequest *request = new HttpRequest();
             string nourl = "";

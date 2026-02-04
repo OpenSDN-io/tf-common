@@ -39,7 +39,7 @@ size_t StatsClientLocal::SendBuf(uint8_t *data, size_t size) {
 }
 
 bool StatsClientLocal::SendMsg(Sandesh *sandesh) {
-    tbb::mutex::scoped_lock lock(send_mutex_);
+    std::scoped_lock lock(send_mutex_);
     uint8_t *buffer;
     int32_t xfer = 0, ret = 0;
     uint32_t offset;
@@ -97,7 +97,7 @@ size_t StatsClientRemote::SendBuf(uint8_t *data, size_t size) {
 }
 
 bool StatsClientRemote::SendMsg(Sandesh *sandesh) {
-    tbb::mutex::scoped_lock lock(send_mutex_);
+    std::scoped_lock lock(send_mutex_);
     uint8_t *buffer;
     int32_t xfer = 0, ret = 0;
     uint32_t offset;

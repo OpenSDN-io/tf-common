@@ -4,7 +4,7 @@
 
 #include <iostream>
 #include <fstream>
-#include "tbb/atomic.h"
+#include <atomic>
 #include "io/test/event_manager_test.h"
 #include "base/test/task_test_util.h"
 #include "base/logging.h"
@@ -15,8 +15,8 @@ using namespace std;
 
 
 TaskScheduler       *scheduler;
-tbb::atomic<int> timer_count_;
-tbb::atomic<bool> timer_hold_;
+std::atomic<int> timer_count_;
+std::atomic<bool> timer_hold_;
 
 class TimerTest : public Timer {
 public:
@@ -38,9 +38,9 @@ public:
         count_--;
     }
 
-    static tbb::atomic<uint32_t> count_;
+    static std::atomic<uint32_t> count_;
 };
-tbb::atomic<uint32_t> TimerTest::count_;
+std::atomic<uint32_t> TimerTest::count_;
 
 class TimerUT : public ::testing::Test {
 public:
@@ -70,12 +70,12 @@ public:
 };
 
 bool TimerCb() {
-    timer_count_.fetch_and_increment();
+    timer_count_++;
     return false;
 }
 
 bool PeriodicTimerCb() {
-    timer_count_.fetch_and_decrement();
+    timer_count_--;
     return timer_count_ != 0;
 }
 
@@ -84,12 +84,12 @@ bool TimerCbSleep() {
     while (timer_hold_ != false) {
         usleep(1000);
     }
-    timer_count_.fetch_and_increment();
+    timer_count_++;
     return false;
 }
 
 bool TimerCbReschedule(Timer *timer, int *new_timeout) {
-    timer_count_.fetch_and_increment();
+    timer_count_++;
 
     if(*new_timeout) {
         timer->Reschedule(*new_timeout);

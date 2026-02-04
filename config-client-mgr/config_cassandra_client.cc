@@ -548,7 +548,7 @@ void ConfigCassandraClient::EnqueueUUIDRequest(string oper, string obj_type,
 
 void ConfigCassandraClient::BulkSyncDone() {
     long num_config_readers_still_processing =
-        bulk_sync_status_.fetch_and_decrement();
+        bulk_sync_status_.fetch_sub(1);
     if (num_config_readers_still_processing == 1) {
         CONFIG_CLIENT_DEBUG(ConfigClientMgrDebug,
                             "Cassandra SM: BulkSyncDone by all readers");

@@ -4,10 +4,9 @@
 #include <boost/foreach.hpp>
 #include <fstream>
 
+#include <atomic>
 #include <string>
 #include <vector>
-
-#include <tbb/mutex.h>
 
 #include "base/logging.h"
 #include "base/task_annotations.h"
@@ -28,8 +27,8 @@
 #include "testing/gunit.h"
 
 using namespace std;
-static tbb::atomic<int> consume_count_;
-static tbb::atomic<int> bind_queue_count_;
+static std::atomic<int> consume_count_;
+static std::atomic<int> bind_queue_count_;
 
 class ConfigJsonParserTest : public ConfigJsonParserBase {
     virtual void SetupGraphFilter() { }

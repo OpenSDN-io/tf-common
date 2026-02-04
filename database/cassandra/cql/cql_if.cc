@@ -5,7 +5,6 @@
 #include <assert.h>
 #include <fstream>
 
-#include <tbb/atomic.h>
 #include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/join.hpp>
@@ -2033,7 +2032,7 @@ bool CqlIfImpl::LocatePrepareInsertIntoTable(const GenDb::NewCf &cf) {
         return success;
     }
     // Store the prepared statement into the map
-    tbb::mutex::scoped_lock lock(map_mutex_);
+    std::scoped_lock lock(map_mutex_);
     success = (insert_prepared_map_.insert(
         std::make_pair(table_name, prepared))).second;
     assert(success);
@@ -2042,7 +2041,7 @@ bool CqlIfImpl::LocatePrepareInsertIntoTable(const GenDb::NewCf &cf) {
 
 bool CqlIfImpl::GetPrepareInsertIntoTable(const std::string &table_name,
     impl::CassPreparedPtr *prepared) const {
-    tbb::mutex::scoped_lock lock(map_mutex_);
+    std::scoped_lock lock(map_mutex_);
     CassPreparedMapType::const_iterator it(
         insert_prepared_map_.find(table_name));
     if (it == insert_prepared_map_.end()) {
@@ -2965,14 +2964,14 @@ void CqlIf::Db_ResetQueueWaterMarks() {
 // Stats
 bool CqlIf::Db_GetStats(std::vector<GenDb::DbTableInfo> *vdbti,
         GenDb::DbErrors *dbe) {
-    tbb::mutex::scoped_lock lock(stats_mutex_);
+    std::scoped_lock lock(stats_mutex_);
     stats_.GetDiffs(vdbti, dbe);
     return true;
 }
 
 bool CqlIf::Db_GetCumulativeStats(std::vector<GenDb::DbTableInfo> *vdbti,
         GenDb::DbErrors *dbe) const {
-    tbb::mutex::scoped_lock lock(stats_mutex_);
+    std::scoped_lock lock(stats_mutex_);
     stats_.GetCumulative(vdbti, dbe);
     return true;
 }
@@ -2994,63 +2993,63 @@ bool CqlIf::Db_GetCqlStats(DbStats *db_stats) const {
 }
 
 void CqlIf::IncrementTableWriteStats(const std::string &table_name) {
-    tbb::mutex::scoped_lock lock(stats_mutex_);
+    std::scoped_lock lock(stats_mutex_);
     stats_.IncrementTableWrite(table_name);
 }
 
 void CqlIf::IncrementTableWriteStats(const std::string &table_name,
     uint64_t num_writes) {
-    tbb::mutex::scoped_lock lock(stats_mutex_);
+    std::scoped_lock lock(stats_mutex_);
     stats_.IncrementTableWrite(table_name, num_writes);
 }
 
 void CqlIf::IncrementTableWriteFailStats(const std::string &table_name) {
-    tbb::mutex::scoped_lock lock(stats_mutex_);
+    std::scoped_lock lock(stats_mutex_);
     stats_.IncrementTableWriteFail(table_name);
 }
 
 void CqlIf::IncrementTableWriteFailStats(const std::string &table_name,
     uint64_t num_writes) {
-    tbb::mutex::scoped_lock lock(stats_mutex_);
+    std::scoped_lock lock(stats_mutex_);
     stats_.IncrementTableWriteFail(table_name, num_writes);
 }
 
 void CqlIf::IncrementTableWriteBackPressureFailStats(
     const std::string &table_name) {
-    tbb::mutex::scoped_lock lock(stats_mutex_);
+    std::scoped_lock lock(stats_mutex_);
     stats_.IncrementTableWriteBackPressureFail(table_name);
 }
 
 void CqlIf::IncrementTableReadBackPressureFailStats(
     const std::string &table_name) {
-    tbb::mutex::scoped_lock lock(stats_mutex_);
+    std::scoped_lock lock(stats_mutex_);
     stats_.IncrementTableReadBackPressureFail(table_name);
 }
 
 void CqlIf::IncrementTableReadStats(const std::string &table_name) {
-    tbb::mutex::scoped_lock lock(stats_mutex_);
+    std::scoped_lock lock(stats_mutex_);
     stats_.IncrementTableRead(table_name);
 }
 
 void CqlIf::IncrementTableReadStats(const std::string &table_name,
     uint64_t num_reads) {
-    tbb::mutex::scoped_lock lock(stats_mutex_);
+    std::scoped_lock lock(stats_mutex_);
     stats_.IncrementTableRead(table_name, num_reads);
 }
 
 void CqlIf::IncrementTableReadFailStats(const std::string &table_name) {
-    tbb::mutex::scoped_lock lock(stats_mutex_);
+    std::scoped_lock lock(stats_mutex_);
     stats_.IncrementTableReadFail(table_name);
 }
 
 void CqlIf::IncrementTableReadFailStats(const std::string &table_name,
     uint64_t num_reads) {
-    tbb::mutex::scoped_lock lock(stats_mutex_);
+    std::scoped_lock lock(stats_mutex_);
     stats_.IncrementTableReadFail(table_name, num_reads);
 }
 
 void CqlIf::IncrementErrors(GenDb::IfErrors::Type err_type) {
-    tbb::mutex::scoped_lock lock(stats_mutex_);
+    std::scoped_lock lock(stats_mutex_);
     stats_.IncrementErrors(err_type);
 }
 

@@ -141,7 +141,7 @@ static int BufferCmp(const mutable_buffer &lhs, const const_buffer &rhs) {
 }
 
 void TcpSession::ReleaseBuffer(Buffer buffer) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     ReleaseBufferLocked(buffer);
 }
 
@@ -167,7 +167,7 @@ void TcpSession::AsyncReadStartInternal(TcpSessionPtr session) {
         server_->stats_.read_blocked_duration_usecs += blocked_usecs;
     }
 
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     AsyncReadSome();
 }
 
@@ -203,7 +203,7 @@ void TcpSession::AsyncWrite(const uint8_t *data, std::size_t size) {
 }
 
 TcpSession::Endpoint TcpSession::local_endpoint() const {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     if (!established_)
         return Endpoint();
 
@@ -216,7 +216,7 @@ TcpSession::Endpoint TcpSession::local_endpoint() const {
 }
 
 void TcpSession::set_observer(EventObserver observer) {
-    tbb::mutex::scoped_lock lock(obs_mutex_);
+    std::scoped_lock lock(obs_mutex_);
     observer_ = observer;
 }
 
@@ -255,7 +255,7 @@ void TcpSession::Accepted() {
     TCP_SESSION_LOG_DEBUG(this, TCP_DIR_OUT,
                           "Passive session Accept complete");
     {
-        tbb::mutex::scoped_lock obs_lock(obs_mutex_);
+        std::scoped_lock obs_lock(obs_mutex_);
         if (observer_) {
             observer_(this, ACCEPT);
         }
@@ -270,7 +270,7 @@ bool TcpSession::Connected(Endpoint remote) {
     assert(refcount_);
 
     {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         if (closed_) {
             return false;
         }
@@ -282,7 +282,7 @@ bool TcpSession::Connected(Endpoint remote) {
                           "Active session connection complete");
 
     {
-        tbb::mutex::scoped_lock obs_lock(obs_mutex_);
+        std::scoped_lock obs_lock(obs_mutex_);
         if (observer_) {
             observer_(this, CONNECT_COMPLETE);
         }
@@ -295,7 +295,7 @@ bool TcpSession::Connected(Endpoint remote) {
 }
 
 void TcpSession::ConnectFailed() {
-    tbb::mutex::scoped_lock obs_lock(obs_mutex_);
+    std::scoped_lock obs_lock(obs_mutex_);
     if (observer_) {
         observer_(this, CONNECT_FAILED);
     }
@@ -304,7 +304,7 @@ void TcpSession::ConnectFailed() {
 // Requires: lock must not be held
 void TcpSession::CloseInternal(const error_code &ec,
                                bool call_observer, bool notify_server) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
 
     if (socket() != NULL && !closed_) {
         error_code error;
@@ -329,10 +329,10 @@ void TcpSession::CloseInternal(const error_code &ec,
     // Take a reference through intrusive pointer to protect session from
     // possibly getting deleted from another thread.
     TcpSessionPtr session = TcpSessionPtr(this);
-    lock.release();
+    lock.unlock();
 
     if (call_observer) {
-        tbb::mutex::scoped_lock obs_lock(obs_mutex_);
+        std::scoped_lock obs_lock(obs_mutex_);
         if (observer_) {
             observer_(this, CLOSE);
         }
@@ -352,7 +352,7 @@ void TcpSession::TriggerAsyncReadHandler() {
 }
 
 void TcpSession::Close() {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
 
     // Close can be called by application during cleanup. At this time
     // session may be already closed due to error and there may be write
@@ -365,7 +365,7 @@ void TcpSession::Close() {
         tcp_close_in_progress_ = true;
         return;
     }
-    lock.release();
+    lock.unlock();
 
     error_code ec;
     CloseInternal(ec, false);
@@ -378,9 +378,9 @@ void TcpSession::WriteReady(const error_code &error) {
 void TcpSession::AsyncWriteHandler(TcpSessionPtr session,
                                    const error_code &error,
                                    std::size_t wrote) {
-    tbb::mutex::scoped_lock lock(session->mutex_);
+    std::unique_lock<std::mutex> lock(session->mutex_);
     if (session->IsSocketErrorHard(error)) {
-        lock.release();
+        lock.unlock();
         TCP_SESSION_LOG_ERROR(session, TCP_DIR_OUT,
                               "Write failed due to error: " << error.message());
         session->CloseInternal(error, true);
@@ -403,12 +403,12 @@ void TcpSession::AsyncWriteHandler(TcpSessionPtr session,
     if (more_write) {
         session->writer_->TriggerAsyncWrite();
     } else if (session->tcp_close_in_progress_) {
-        lock.release();
+        lock.unlock();
         session->CloseInternal(error, true);
         return;
     }
 
-    lock.release();
+    lock.unlock();
     if (send_ready)
         session->WriteReady(error);
     return;
@@ -416,7 +416,7 @@ void TcpSession::AsyncWriteHandler(TcpSessionPtr session,
 
 void TcpSession::AsyncWriteInternal(TcpSessionPtr session) {
 
-    tbb::mutex::scoped_lock lock(session->mutex_);
+    std::scoped_lock lock(session->mutex_);
 
     //
     // Ignore if connection is already closed.
@@ -427,7 +427,7 @@ void TcpSession::AsyncWriteInternal(TcpSessionPtr session) {
 
 bool TcpSession::Send(const uint8_t *data, size_t size, size_t *sent) {
     bool ret = true;
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
 
     // Reset sent, if provided.
     if (sent) *sent = 0;
@@ -441,7 +441,7 @@ bool TcpSession::Send(const uint8_t *data, size_t size, size_t *sent) {
     if (socket()->non_blocking()) {
         error_code error;
         int len = writer_->AsyncSend(data, size, &error);
-        lock.release();
+        lock.unlock();
         if (len < 0) {
             TCP_SESSION_LOG_ERROR(this, TCP_DIR_OUT,
                                   "Write failed due to error: "
@@ -481,7 +481,7 @@ size_t TcpSession::GetReadBufferSize() const {
 }
 
 void TcpSession::AsyncReadHandler(TcpSessionPtr session) {
-    tbb::mutex::scoped_lock lock(session->mutex_);
+    std::unique_lock<std::mutex> lock(session->mutex_);
     if (session->closed_) {
         return;
     }
@@ -510,7 +510,7 @@ void TcpSession::AsyncReadHandler(TcpSessionPtr session) {
                     << " : " << error.message());
             }
         }
-        lock.release();
+        lock.unlock();
         session->CloseInternal(error, true);
         return;
     }

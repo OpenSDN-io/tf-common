@@ -79,7 +79,9 @@
 
 #include <time.h>
 
+#include <atomic>
 #include <map>
+#include <mutex>
 
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/ptr_container/ptr_map.hpp>
@@ -424,7 +426,7 @@ private:
     static EventManager *event_manager_;
     static bool send_queue_enabled_;
     static SandeshMessageStatistics msg_stats_;
-    static tbb::mutex stats_mutex_;
+    static std::mutex stats_mutex_;
     static log4cplus::Logger logger_;
     static log4cplus::Logger slo_logger_;
     static log4cplus::Logger sampled_logger_;
@@ -443,7 +445,7 @@ private:
     SandeshLevel::type level_;
     std::string category_;
     std::string name_;
-    static tbb::atomic<uint32_t> sandesh_send_ratelimit_;
+    static std::atomic<uint32_t> sandesh_send_ratelimit_;
     static bool slo_to_collector_;
     static bool sampled_to_collector_;
     static bool slo_to_logger_;

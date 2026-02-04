@@ -4,6 +4,7 @@
 // Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 //
 
+#include <atomic>
 #include <queue>
 
 #include "testing/gunit.h"
@@ -196,10 +197,10 @@ public:
     size_t wm_cb_qsize_;
     size_t wm_cb_count_;
     WaterMarkTestCbType::type wm_cb_type_;
-    tbb::atomic<int> exit_callback_counter_;
-    tbb::atomic<bool> exit_callback_running_;
-    tbb::atomic<bool> wm_callback_running_;
-    tbb::atomic<bool> shutdown_test_exit_callback_sleep_;
+    std::atomic<int> exit_callback_counter_;
+    std::atomic<bool> exit_callback_running_;
+    std::atomic<bool> wm_callback_running_;
+    std::atomic<bool> shutdown_test_exit_callback_sleep_;
 };
 
 TEST_F(QueueTaskTest, StartRunnerBasic) {
@@ -758,8 +759,8 @@ public:
 
     int wq_task_id_;
     WorkQueue<int *> work_queue_;
-    tbb::atomic<bool> dequeue_cb_sleep_;
-    tbb::atomic<bool> dequeue_cb_running_;
+    std::atomic<bool> dequeue_cb_sleep_;
+    std::atomic<bool> dequeue_cb_running_;
 };
 
 template<>
@@ -882,13 +883,13 @@ class QueueTaskWaterMarkTest : public ::testing::Test {
 template<>
 size_t WorkQueue<QWMTestEntry>::AtomicIncrementQueueCount(
     QWMTestEntry *entry) {
-    return count_.fetch_and_add(entry->size_) + entry->size_;
+    return count_.fetch_add(entry->size_) + entry->size_;
 }
 
 template<>
 size_t WorkQueue<QWMTestEntry>::AtomicDecrementQueueCount(
     QWMTestEntry *entry) {
-    return count_.fetch_and_add(0-entry->size_) - entry->size_;
+    return count_.fetch_sub(entry->size_) - entry->size_;
 }
 
 TEST_F(QueueTaskWaterMarkTest, Basic) {

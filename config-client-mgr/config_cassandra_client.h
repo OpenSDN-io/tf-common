@@ -8,6 +8,7 @@
 #include <boost/ptr_container/ptr_map.hpp>
 #include <boost/shared_ptr.hpp>
 
+#include <atomic>
 #include <list>
 #include <map>
 #include <set>
@@ -255,7 +256,7 @@ protected:
     int num_workers_;
     PartitionList partitions_;
     boost::scoped_ptr<TaskTrigger> fq_name_reader_;
-    tbb::atomic<long> bulk_sync_status_;
+    std::atomic<long> bulk_sync_status_;
 };
 
 #endif  // config_cass_client_h

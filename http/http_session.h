@@ -5,9 +5,11 @@
 #ifndef __HTTP_SESSION_H__
 #define __HTTP_SESSION_H__
 
+#include <atomic>
+#include <mutex>
+
 #include <boost/scoped_ptr.hpp>
 #include <tbb/concurrent_queue.h>
-#include <tbb/atomic.h>
 
 #include "base/util.h"
 #include "io/ssl_session.h"
@@ -42,7 +44,7 @@ class HttpSession: public SslSession {
         hs->set_client_context(ctx);
         return true;
     }    
-    static tbb::atomic<long> GetPendingTaskCount() {
+    static long GetPendingTaskCount() {
         return task_count_;
     }
 
@@ -68,7 +70,7 @@ class HttpSession: public SslSession {
         return context_map_;
     }
     static HttpSessionPtr GetSession(std::string const& s) {
-        tbb::mutex::scoped_lock lock(map_mutex_);
+        std::scoped_lock lock(map_mutex_);
         map_type::iterator it = GetMap()->find(s);
         if (it == GetMap()->end()) {
             return 0;
@@ -80,15 +82,15 @@ class HttpSession: public SslSession {
       { client_context_str_ = client_ctx; }
     boost::scoped_ptr<RequestBuilder> request_builder_;
     tbb::concurrent_queue<HttpRequest *> request_queue_;
-    tbb::atomic<bool> req_queue_empty_;
+    std::atomic<bool> req_queue_empty_;
     std::string context_str_;
     std::string client_context_str_;
     SessionEventCb event_cb_;
 
     static int req_handler_task_id_;
     static map_type* context_map_;
-    static tbb::mutex map_mutex_;
-    static tbb::atomic<long> task_count_;
+    static std::mutex map_mutex_;
+    static std::atomic<long> task_count_;
 
     DISALLOW_COPY_AND_ASSIGN(HttpSession);
 };

@@ -15,7 +15,6 @@ using boost::asio::buffer;
 using boost::asio::buffer_cast;
 using boost::asio::mutable_buffer;
 using boost::system::error_code;
-using tbb::mutex;
 using std::min;
 
 const int TcpMessageWriter::kDefaultWriteBufferSize;

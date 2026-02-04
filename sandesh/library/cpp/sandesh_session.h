@@ -11,7 +11,7 @@
 #ifndef __SANDESH_SESSION_H__
 #define __SANDESH_SESSION_H__
 
-#include <tbb/mutex.h>
+#include <mutex>
 
 #include <boost/system/error_code.hpp>
 #include <boost/asio.hpp>
@@ -45,7 +45,7 @@ public:
     }
     void WriteReady(const boost::system::error_code &ec);
     bool SendReady() {
-        tbb::mutex::scoped_lock lock(send_mutex_);
+        std::scoped_lock lock(send_mutex_);
         return ready_to_send_;
     }
 
@@ -83,7 +83,7 @@ private:
         send_buf_offset_ = 0;
     }
 
-    tbb::mutex send_mutex_;
+    std::mutex send_mutex_;
     bool ready_to_send_;
     // send_buf_ is used to store unsent data
     uint8_t *send_buf_;
@@ -130,7 +130,7 @@ private:
     size_t offset_;
     size_t msg_length_;
     SandeshSession *session_;
-    tbb::mutex cb_mutex_;
+    std::mutex cb_mutex_;
     SandeshReceiveMsgCb cb_;
 
     static const int kDefaultRecvSize = SandeshWriter::kDefaultSendSize;
@@ -161,11 +161,11 @@ public:
         return writer_.get();
     }
     void SetConnection(SandeshConnection *connection) {
-        tbb::mutex::scoped_lock lock(conn_mutex_);
+        std::scoped_lock lock(conn_mutex_);
         connection_ = connection;
     }
     SandeshConnection *connection() {
-        tbb::mutex::scoped_lock lock(conn_mutex_);
+        std::scoped_lock lock(conn_mutex_);
         return connection_;
     }
     void SetReceiveMsgCb(SandeshReceiveMsgCb cb) {
@@ -242,8 +242,8 @@ private:
     boost::scoped_ptr<Sandesh::SandeshBufferQueue> send_buffer_queue_;
     StatsClient *stats_client_;
     SandeshConnection *connection_;
-    tbb::mutex conn_mutex_;
-    tbb::mutex send_mutex_;
+    std::mutex conn_mutex_;
+    std::mutex send_mutex_;
     int keepalive_idle_time_;
     int keepalive_interval_;
     int keepalive_probes_;

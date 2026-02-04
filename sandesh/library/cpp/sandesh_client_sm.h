@@ -11,9 +11,10 @@
 #ifndef __SANDESH_CLIENT_SM_H__
 #define __SANDESH_CLIENT_SM_H__
 
+#include <atomic>
 #include <string>
+#include <mutex>
 #include <boost/function.hpp>
-#include <tbb/mutex.h>
 #include <io/tcp_server.h>
 #include <sandesh/sandesh_session.h>
 
@@ -69,7 +70,7 @@ public:
         return session_;
     }
     TcpServer::Endpoint server() {
-        tbb::mutex::scoped_lock l(mtex_); return server_;
+        std::scoped_lock l(mtex_); return server_;
     }
 
     // This function is used to start and stop the state machine
@@ -92,30 +93,31 @@ protected:
     virtual void EnqueDelSession(SandeshSession * session) = 0;
 
     void set_session(SandeshSession * session, bool enq) {
-        if (session_ != NULL) {
-            session_->set_observer(NULL);
-            session_->SetReceiveMsgCb(NULL);
-            session_->Close();
-            session_->Shutdown();
-            if (enq) EnqueDelSession(session_);
+        session = session_.exchange(session);
+        if (session != NULL) {
+            session->set_observer(NULL);
+            session->SetReceiveMsgCb(NULL);
+            session->Close();
+            session->Shutdown();
+            if (enq)
+                EnqueDelSession(session);
         }
-        session_ = session;
     }
 
     bool send_session(Sandesh *snh) {
-        return snh->Enqueue(session_->send_queue());
+        return snh->Enqueue(session()->send_queue());
     }
 
     void set_server(TcpServer::Endpoint e) {
-        tbb::mutex::scoped_lock l(mtex_); server_ = e;
+        std::scoped_lock l(mtex_); server_ = e;
     }
 
     Mgr * const mgr_;
-    tbb::atomic<State> state_;
+    std::atomic<State> state_;
 
 private:
-    tbb::mutex mtex_;
-    tbb::atomic<SandeshSession *> session_;
+    std::mutex mtex_;
+    std::atomic<SandeshSession *> session_;
     TcpServer::Endpoint server_;
 
     friend class SandeshClientStateMachineTest;

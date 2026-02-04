@@ -36,8 +36,8 @@ LifetimeActor::~LifetimeActor() {
 // to dependents happens in the context of the LifetimeManager's Task.
 //
 void LifetimeActor::Delete() {
-    tbb::mutex::scoped_lock lock(mutex_);
-    if (deleted_.fetch_and_store(true)) {
+    std::scoped_lock lock(mutex_);
+    if (deleted_.exchange(true)) {
         return;
     }
     delete_time_stamp_usecs_ = UTCTimestampUsec();
@@ -56,7 +56,7 @@ void LifetimeActor::Delete() {
 //
 void LifetimeActor::PropagateDelete() {
     assert(deleted_);
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     for (Dependents::iterator iter = dependents_.begin();
          iter != dependents_.end(); ++iter) {
         iter->Delete();
@@ -99,7 +99,7 @@ void LifetimeActor::Shutdown() {
 // Prevent object from getting destroyed - testing only.
 //
 void LifetimeActor::PauseDelete() {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     assert(!deleted_);
     delete_paused_ = true;
 }
@@ -111,7 +111,7 @@ void LifetimeActor::PauseDelete() {
 // Allow object to get destroyed - testing only.
 //
 void LifetimeActor::ResumeDelete() {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     assert(deleted_);
     delete_paused_ = false;
     refcount_++;
@@ -125,7 +125,7 @@ void LifetimeActor::ResumeDelete() {
 //
 void LifetimeActor::DependencyAdd(
     DependencyRef<LifetimeRefBase, LifetimeActor> *node) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     assert(!deleted_);
     dependents_.Add(node);
 }
@@ -139,7 +139,7 @@ void LifetimeActor::DependencyAdd(
 //
 void LifetimeActor::DependencyRemove(
     DependencyRef<LifetimeRefBase, LifetimeActor> *node) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     dependents_.Remove(node);
     if (deleted_ && dependents_.empty()) {
         refcount_++;
@@ -151,12 +151,12 @@ void LifetimeActor::DependencyRemove(
 // "lock" on the object in the form of either a dependency or an
 // explicit test performed by the derived class MayDelete() method.
 void LifetimeActor::ReferenceIncrement() {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     refcount_++;
 }
 
 bool LifetimeActor::ReferenceDecrementAndTest()  {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     refcount_--;
     return (refcount_ == 0 && dependents_.empty() && !delete_paused_ &&
             MayDelete());

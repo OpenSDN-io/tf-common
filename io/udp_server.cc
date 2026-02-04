@@ -31,7 +31,7 @@ public:
     }
 
     virtual bool Run() {
-        tbb::mutex::scoped_lock lock(server_->state_guard_);
+        std::scoped_lock lock(server_->state_guard_);
         if (server_->state_ == OK) {
             server_->OnRead(buffer_, remote_endpoint_);
             server_->DeallocateBuffer(buffer_);
@@ -85,20 +85,20 @@ void UdpServer::SetName(udp::endpoint ep) {
 
 UdpServer::~UdpServer() {
     {
-        tbb::mutex::scoped_lock lock(state_guard_);
+        std::scoped_lock lock(state_guard_);
         assert(state_ == Uninitialized || state_ == SocketOpenFailed ||
             state_ == SocketBindFailed);
     }
     {
-        tbb::mutex::scoped_lock lock(pbuf_guard_);
+        std::scoped_lock lock(pbuf_guard_);
         assert(pbuf_.empty());
     }
 }
 
 void UdpServer::Shutdown() {
-    tbb::mutex::scoped_lock lock(state_guard_);
+    std::scoped_lock lock(state_guard_);
     {
-        tbb::mutex::scoped_lock lock_pbuf(pbuf_guard_);
+        std::scoped_lock lock_pbuf(pbuf_guard_);
         while (!pbuf_.empty()) {
             delete[] pbuf_.back();
             pbuf_.pop_back();
@@ -169,7 +169,7 @@ bool UdpServer::Initialize(udp::endpoint local_endpoint) {
 mutable_buffer UdpServer::AllocateBuffer(std::size_t s) {
     uint8_t *p = new uint8_t[s];
     {
-        tbb::mutex::scoped_lock lock(pbuf_guard_);
+        std::scoped_lock lock(pbuf_guard_);
         pbuf_.push_back(p);
     }
     return mutable_buffer(p, s);
@@ -182,7 +182,7 @@ mutable_buffer UdpServer::AllocateBuffer() {
 void UdpServer::DeallocateBuffer(const const_buffer &buffer) {
     const uint8_t *p = buffer_cast<const uint8_t *>(buffer);
     {
-        tbb::mutex::scoped_lock lock(pbuf_guard_);
+        std::scoped_lock lock(pbuf_guard_);
         std::vector<uint8_t *>::iterator f = std::find(pbuf_.begin(),
             pbuf_.end(), p);
         if (f != pbuf_.end())
@@ -210,7 +210,7 @@ void UdpServer::StartSend(udp::endpoint ep, std::size_t bytes_to_send,
 void UdpServer::HandleSendInternal(const const_buffer send_buffer,
         udp::endpoint remote_endpoint, std::size_t bytes_transferred,
         const boost::system::error_code& error) {
-    tbb::mutex::scoped_lock lock(state_guard_);
+    std::scoped_lock lock(state_guard_);
     if (state_ != OK) {
         stats_.write_errors++;
         UDP_SERVER_LOG_ERROR(this, UDP_DIR_OUT,
@@ -250,7 +250,7 @@ void UdpServer::StartReceive() {
 
 void UdpServer::HandleReceiveInternal(const_buffer recv_buffer,
     std::size_t bytes_transferred, const boost::system::error_code& error) {
-    tbb::mutex::scoped_lock lock(state_guard_);
+    std::scoped_lock lock(state_guard_);
     if (state_ != OK) {
         stats_.read_errors++;
         UDP_SERVER_LOG_ERROR(this, UDP_DIR_IN,

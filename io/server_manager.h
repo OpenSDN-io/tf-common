@@ -5,8 +5,8 @@
 #ifndef SRC_IO_SERVER_MANAGER_H_
 #define SRC_IO_SERVER_MANAGER_H_
 
-#include <tbb/mutex.h>
 #include <set>
+#include <mutex>
 
 //
 // ServerManager is the place holder for all the TcpServer and UdpServer
@@ -27,7 +27,7 @@ public:
     // Add a server object to the data base, by creating an intrusive reference
     //
     static void AddServer(ServerType *server) {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         server_ref_.insert(ServerPtrType(server));
     }
     //
@@ -36,7 +36,7 @@ public:
     // boost::asio, the server object deletion is automatically deferred
     //
     static void DeleteServer(ServerType *server) {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         server_ref_.erase(ServerPtrType(server));
     }
     //
@@ -56,7 +56,7 @@ private:
     };
     typedef std::set<ServerPtrType, ServerPtrCmp> ServerSet;
 
-    static tbb::mutex mutex_;
+    static std::mutex mutex_;
     static ServerSet server_ref_;
 };
 
@@ -65,6 +65,6 @@ typename ServerManager<ServerType, ServerPtrType>::ServerSet
     ServerManager<ServerType, ServerPtrType>::server_ref_;
 
 template <typename ServerType, typename ServerPtrType>
-tbb::mutex ServerManager<ServerType, ServerPtrType>::mutex_;
+std::mutex ServerManager<ServerType, ServerPtrType>::mutex_;
 
 #endif  // SRC_IO_SERVER_MANAGER_H_

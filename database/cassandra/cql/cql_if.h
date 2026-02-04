@@ -7,8 +7,9 @@
 
 #include <string>
 #include <vector>
+#include <mutex>
+#include <atomic>
 
-#include <tbb/atomic.h>
 #include <database/gendb_if.h>
 #include <database/gendb_statistics.h>
 #include <database/cassandra/cql/cql_types.h>
@@ -149,9 +150,9 @@ class CqlIf : public GenDb::GenDbIf {
 
     boost::scoped_ptr<interface::CassLibrary> cci_;
     boost::scoped_ptr<CqlIfImpl> impl_;
-    tbb::atomic<bool> initialized_;
+    std::atomic<bool> initialized_;
     std::vector<GenDb::Endpoint> endpoints_;
-    mutable tbb::mutex stats_mutex_;
+    mutable std::mutex stats_mutex_;
     GenDb::GenDbIfStats stats_;
     bool use_prepared_for_insert_;
     bool create_schema_;

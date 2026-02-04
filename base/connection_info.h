@@ -14,8 +14,6 @@
 #include <boost/assign/list_of.hpp>
 #include <boost/scoped_ptr.hpp>
 
-#include <tbb/mutex.h>
-
 #include <base/feature_flags.h>
 #include <base/sandesh/process_info_constants.h>
 #include <base/sandesh/process_info_types.h>
@@ -72,7 +70,7 @@ private:
     static void CreateInstance(SendUveCb send_uve_cb);
 
     static boost::scoped_ptr<ConnectionState> instance_;
-    mutable tbb::mutex  mutex_;
+    mutable std::mutex  mutex_;
     ConnectionInfoMap connection_map_;
     SendUveCb send_uve_cb_;
 };

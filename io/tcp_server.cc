@@ -141,7 +141,7 @@ bool TcpServer::InitializeInternal(tcp::endpoint localaddr) {
 }
 
 void TcpServer::Shutdown() {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     error_code ec;
 
     if (acceptor_) {
@@ -157,10 +157,11 @@ void TcpServer::Shutdown() {
 // Close and remove references from all sessions. The application code must
 // make sure it no longer holds any references to these sessions.
 void TcpServer::ClearSessions() {
-    tbb::mutex::scoped_lock lock(mutex_);
     SessionSet refs;
-    refs.swap(session_ref_);
-    lock.release();
+    {
+        std::scoped_lock lock(mutex_);
+        refs.swap(session_ref_);
+    }
 
     for (SessionSet::iterator iter = refs.begin(), next = iter;
          iter != refs.end(); iter = next) {
@@ -175,7 +176,7 @@ void TcpServer::ClearSessions() {
 }
 
 void TcpServer::UpdateSessionsDscp(uint8_t dscp) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
 
     for (SessionSet::iterator iter = session_ref_.begin(), next = iter;
          iter != session_ref_.end(); iter = next) {
@@ -188,7 +189,7 @@ void TcpServer::UpdateSessionsDscp(uint8_t dscp) {
 TcpSession *TcpServer::CreateSession() {
     TcpSession *session = AllocSession(false);
     {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         session_ref_.insert(TcpSessionPtr(session));
     }
     return session;
@@ -199,7 +200,7 @@ void TcpServer::DeleteSession(TcpSession *session) {
     // session.
     session->Close();
     {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         assert(session->refcount_);
         session_ref_.erase(TcpSessionPtr(session));
         if (session_ref_.empty() && session_map_.empty()) {
@@ -233,7 +234,7 @@ bool TcpServer::RemoveSessionFromMap(Endpoint remote, TcpSession *session) {
 }
 
 void TcpServer::OnSessionClose(TcpSession *session) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
 
     // CloseSessions closes and removes all the sessions from the map.
     if (session_map_.empty()) {
@@ -252,14 +253,14 @@ void TcpServer::OnSessionClose(TcpSession *session) {
 // session object has actually been freed yet as ASIO callbacks can be in
 // progress.
 void TcpServer::WaitForEmpty() {
-    tbb::interface5::unique_lock<tbb::mutex> lock(mutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
     while (!session_ref_.empty() || !session_map_.empty()) {
         cond_var_.wait(lock);
     }
 }
 
 void TcpServer::AsyncAccept() {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     if (acceptor_ == NULL) {
         return;
     }
@@ -270,7 +271,7 @@ void TcpServer::AsyncAccept() {
 }
 
 int TcpServer::GetPort() const {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     if (acceptor_.get() == NULL) {
         return -1;
     }
@@ -283,12 +284,12 @@ int TcpServer::GetPort() const {
 }
 
 bool TcpServer::HasSessions() const {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     return !session_map_.empty();
 }
 
 bool TcpServer::HasSessionReadAvailable() const {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     error_code error;
     if (accept_socket()->available(error) > 0) {
         return  true;
@@ -304,7 +305,7 @@ bool TcpServer::HasSessionReadAvailable() const {
 }
 
 TcpServer::Endpoint TcpServer::LocalEndpoint() const {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     if (acceptor_.get() == NULL) {
         return Endpoint();
     }
@@ -405,7 +406,7 @@ done:
 void TcpServer::AcceptHandlerComplete(TcpSessionPtr session) {
     tcp::endpoint remote = session->remote_endpoint();
     {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         if (AcceptSession(session.get())) {
             TCP_SESSION_LOG_UT_DEBUG(session, TCP_DIR_IN,
                                      "Accepted session from "
@@ -428,7 +429,7 @@ void TcpServer::AcceptHandlerComplete(TcpSessionPtr session) {
 }
 
 TcpSession *TcpServer::GetSession(Endpoint remote) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     SessionMap::const_iterator iter = session_map_.find(remote);
     if (iter != session_map_.end()) {
         return iter->second;
@@ -459,14 +460,14 @@ void TcpServer::ConnectHandlerComplete(TcpSessionPtr session) {
     }
 
     {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         InsertSessionToMap(remote, session.get());
     }
 
     // Connected verifies whether the session has been closed or is still
     // active.
     if (!session->Connected(remote)) {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         RemoveSessionFromMap(remote, session.get());
     }
 }

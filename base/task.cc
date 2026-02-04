@@ -6,10 +6,10 @@
 #include <fstream>
 #include <map>
 #include <iostream>
+#include <atomic>
 #include <boost/intrusive/set.hpp>
 #include <boost/optional.hpp>
 
-#include "tbb/atomic.h"
 #include "tbb/task.h"
 #include "tbb/enumerable_thread_specific.h"
 #include "base/logging.h"
@@ -321,7 +321,7 @@ private:
 
     /// @brief No. of tasks running in the group
     int                     run_count_;
-    tbb::atomic<uint64_t>   total_run_time_;
+    std::atomic<uint64_t>   total_run_time_;
 
     /// @brief Policy rules for the group
     TaskGroupPolicyList     policy_;
@@ -580,7 +580,7 @@ TaskGroup *TaskScheduler::QueryTaskGroup(int task_id) {
 
 bool TaskScheduler::IsTaskGroupEmpty(int task_id) const {
     CHECK_CONCURRENCY("bgp::Config");
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     TaskGroup *group = task_group_db_[task_id];
     assert(group);
     assert(group->TaskRunCount() == 0);
@@ -615,7 +615,7 @@ void TaskScheduler::SetLatencyThreshold(const std::string &name,
 }
 
 void TaskScheduler::SetPolicy(int task_id, TaskPolicy &policy) {
-    tbb::mutex::scoped_lock     lock(mutex_);
+    std::scoped_lock     lock(mutex_);
 
     TaskGroup *group = GetTaskGroup(task_id);
     TaskEntry *group_entry = group->GetTaskEntry(-1);
@@ -640,8 +640,7 @@ void TaskScheduler::SetPolicy(int task_id, TaskPolicy &policy) {
 }
 
 void TaskScheduler::Enqueue(Task *t) {
-    tbb::mutex::scoped_lock     lock(mutex_);
-
+    std::scoped_lock lock(mutex_);
     EnqueueUnLocked(t);
 }
 
@@ -678,7 +677,7 @@ void TaskScheduler::EnqueueUnLocked(Task *t) {
 
     // Is scheduler stopped? Dont add task to deferq_ if scheduler is stopped.
     // TaskScheduler::Start() will run tasks from waitq_
-    if (running_ == false) {
+    if (!running_) {
         entry->AddToWaitQ(t);
         stop_entry_->AddToDeferQ(entry);
         return;
@@ -703,7 +702,7 @@ void TaskScheduler::EnqueueUnLocked(Task *t) {
 }
 
 TaskScheduler::CancelReturnCode TaskScheduler::Cancel(Task *t) {
-    tbb::mutex::scoped_lock  lock(mutex_);
+    std::scoped_lock  lock(mutex_);
 
     // If the task is in RUN state, mark the task for cancellation and return.
     if (t->state_ == Task::RUN) {
@@ -766,7 +765,7 @@ TaskScheduler::CancelReturnCode TaskScheduler::Cancel(Task *t) {
 }
 
 void TaskScheduler::OnTaskExit(Task *t) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     done_count_++;
 
     t->tbb_state(Task::TBB_DONE);
@@ -796,13 +795,13 @@ void TaskScheduler::OnTaskExit(Task *t) {
 }
 
 void TaskScheduler::Stop() {
-    tbb::mutex::scoped_lock             lock(mutex_);
+    std::scoped_lock             lock(mutex_);
 
     running_ = false;
 }
 
 void TaskScheduler::Start() {
-    tbb::mutex::scoped_lock             lock(mutex_);
+    std::scoped_lock             lock(mutex_);
 
     running_ = true;
 
@@ -829,7 +828,7 @@ void TaskScheduler::Print() {
 bool TaskScheduler::IsEmpty(bool running_only) {
     TaskGroup *group;
 
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
 
     for (TaskGroupDb::iterator it = task_group_db_.begin();
          it != task_group_db_.end(); ++it) {
@@ -1356,7 +1355,7 @@ void TaskEntry::DeleteFromDeferQ(TaskEntry &entry) {
     entry.deferq_task_entry_ = NULL;
 }
 
-void TaskEntry::RunTask (Task *t) {
+void TaskEntry::RunTask(Task *t) {
     stats_.run_count_++;
     if (t->task_data_id() != -1) {
         assert(run_task_ == NULL);
@@ -1626,7 +1625,7 @@ void TaskGroup::GetSandeshData(SandeshTaskGroup *resp, bool summary) const {
 }
 
 void TaskScheduler::GetSandeshData(SandeshTaskScheduler *resp, bool summary) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
 
     resp->set_running(running_);
     resp->set_use_spawn(use_spawn_);

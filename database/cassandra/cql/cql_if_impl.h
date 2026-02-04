@@ -5,7 +5,9 @@
 #ifndef DATABASE_CASSANDRA_CQL_CQL_IF_IMPL_H_
 #define DATABASE_CASSANDRA_CQL_CQL_IF_IMPL_H_
 
+#include <atomic>
 #include <string>
+#include <mutex>
 
 #include <boost/unordered_map.hpp>
 
@@ -345,15 +347,15 @@ class CqlIfImpl {
     impl::CassSslPtr ssl_;
     impl::CassSessionPtr session_;
     impl::CassSessionPtr schema_session_;
-    tbb::atomic<SessionState::type> session_state_;
-    tbb::atomic<SessionState::type> schema_session_state_;
+    std::atomic<SessionState::type> session_state_;
+    std::atomic<SessionState::type> schema_session_state_;
     std::string schema_contact_point_;
     std::string keyspace_;
     int io_thread_count_;
     typedef boost::unordered_map<std::string, impl::CassPreparedPtr>
         CassPreparedMapType;
     CassPreparedMapType insert_prepared_map_;
-    mutable tbb::mutex map_mutex_;
+    mutable std::mutex map_mutex_;
 };
 
 }  // namespace cql

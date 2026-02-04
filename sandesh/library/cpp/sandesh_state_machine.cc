@@ -548,10 +548,11 @@ bool SandeshStateMachine::GetMessageDropLevel(
 void SandeshStateMachine::GetEventStatistics(
     SandeshStateMachineStats *sm_stats) {
     std::vector<SandeshStateMachineEvStats> ev_stats;
-    tbb::mutex::scoped_lock elock(smutex_);
-    // State machine event statistics
-    event_stats_.Get(&ev_stats);
-    elock.release();
+    {
+        std::scoped_lock elock(smutex_);
+        // State machine event statistics
+        event_stats_.Get(&ev_stats);
+    }
     sm_stats->set_ev_stats(ev_stats);
     sm_stats->set_state(StateName());
     sm_stats->set_last_state(LastStateName());
@@ -565,9 +566,10 @@ void SandeshStateMachine::GetDetailMessageStatistics(
     // Detail message statistics
     SandeshMessageStatistics::DetailStatsList v_detail_type_stats;
     SandeshMessageStats detail_agg_stats;
-    tbb::mutex::scoped_lock mlock(smutex_);
-    message_stats_.Get(&v_detail_type_stats, &detail_agg_stats);
-    mlock.release();
+    {
+        std::scoped_lock mlock(smutex_);
+        message_stats_.Get(&v_detail_type_stats, &detail_agg_stats);
+    }
     detail_msg_stats->set_type_stats(v_detail_type_stats);
     detail_msg_stats->set_aggregate_stats(detail_agg_stats);
 }
@@ -577,9 +579,10 @@ void SandeshStateMachine::GetBasicMessageStatistics(
     // Basic message statistics
     SandeshMessageStatistics::BasicStatsList v_basic_type_stats;
     SandeshMessageBasicStats basic_agg_stats;
-    tbb::mutex::scoped_lock mlock(smutex_);
-    message_stats_.Get(&v_basic_type_stats, &basic_agg_stats);
-    mlock.release();
+    {
+        std::scoped_lock mlock(smutex_);
+        message_stats_.Get(&v_basic_type_stats, &basic_agg_stats);
+    }
     basic_msg_stats->set_type_stats(v_basic_type_stats);
     basic_msg_stats->set_aggregate_stats(basic_agg_stats);
 }
@@ -658,13 +661,13 @@ void SandeshStateMachine::PassiveOpen(SandeshSession *session) {
 
 void SandeshStateMachine::UpdateRxMsgStats(const std::string &msg_name,
     size_t msg_size) {
-    tbb::mutex::scoped_lock lock(smutex_);
+    std::scoped_lock lock(smutex_);
     message_stats_.UpdateRecv(msg_name, msg_size);
 }
 
 void SandeshStateMachine::UpdateRxMsgFailStats(const std::string &msg_name,
     size_t msg_size, SandeshRxDropReason::type dreason) {
-    tbb::mutex::scoped_lock lock(smutex_);
+    std::scoped_lock lock(smutex_);
     message_stats_.UpdateRecvFailed(msg_name, msg_size, dreason);
 }
 
@@ -782,7 +785,7 @@ void SandeshStateMachine::UpdateEventStats(const sc::event_base &event,
         bool enqueue, bool fail) {
     if (!deleted_) {
         std::string event_name(TYPE_NAME(event));
-        tbb::mutex::scoped_lock lock(smutex_);
+        std::scoped_lock lock(smutex_);
         event_stats_.Update(event_name, enqueue, fail);
     }
 }
@@ -928,9 +931,9 @@ size_t SandeshStateMachine::EventQueue::AtomicIncrementQueueCount(
     SandeshStateMachine::EventContainer *ec) {
     size_t msg_size;
     if (GetEvSandeshMessageRecvSize(ec, &msg_size)) {
-        return count_.fetch_and_add(msg_size) + msg_size;
+        return count_.fetch_add(msg_size) + msg_size;
     } else {
-        return count_.fetch_and_increment() + 1;
+        return count_.fetch_add(1) + 1;
     }
 }
 
@@ -939,9 +942,9 @@ size_t SandeshStateMachine::EventQueue::AtomicDecrementQueueCount(
     SandeshStateMachine::EventContainer *ec) {
     size_t msg_size;
     if (GetEvSandeshMessageRecvSize(ec, &msg_size)) {
-        return count_.fetch_and_add((size_t)(0-msg_size)) - msg_size;
+        return count_.fetch_sub(msg_size) - msg_size;
     } else {
-        return count_.fetch_and_decrement() - 1;
+        return count_.fetch_sub(1) - 1;
     }
 }
 

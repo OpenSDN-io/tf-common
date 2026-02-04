@@ -10,7 +10,7 @@
 #include <map>
 #include <shared_mutex>
 #include <vector>
-#include <tbb/mutex.h>
+#include <mutex>
 // TODO: change deprecated tbb::task to something else
 #define TBB_SUPPRESS_DEPRECATED_MESSAGES 1
 #include <tbb/task.h>
@@ -489,7 +489,7 @@ private:
     TaskEntry               *stop_entry_;
 
     tbb::task_scheduler_init task_scheduler_;
-    mutable tbb::mutex      mutex_;
+    mutable std::mutex      mutex_;
     bool                    running_;
     uint64_t                seqno_;
     TaskGroupDb             task_group_db_;

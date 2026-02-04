@@ -16,7 +16,6 @@
 #include <boost/tuple/tuple.hpp>
 #include <limits>
 #include <sstream>
-#include <tbb/atomic.h> 
 #include "base/task.h"
 
 struct PipelineWorker : public Task {

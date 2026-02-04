@@ -17,10 +17,10 @@
 #include <algorithm>
 #include <vector>
 #include <set>
+#include <mutex>
+#include <atomic>
 
-#include <tbb/atomic.h>
 #include <tbb/concurrent_queue.h>
-#include <tbb/mutex.h>
 #include <tbb/spin_rw_mutex.h>
 
 #include <base/task.h>
@@ -150,7 +150,7 @@ public:
     // assures that the dequeue task - QueueTaskRunner is not running
     // concurrently
     void Shutdown(bool delete_entries = true) {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         ShutdownLocked(delete_entries);
     }
 
@@ -158,7 +158,7 @@ public:
     // Schedule shutdown of the WorkQueue, shutdown may happen asynchronously
     // or in the caller's context also
     void ScheduleShutdown(bool delete_entries = true) {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         if (shutdown_scheduled_) {
             return;
         }
@@ -184,7 +184,7 @@ public:
     }
 
     ~WorkQueue() {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         // Shutdown() needs to be called before deleting
         //assert(!running_ && deleted_);
     }
@@ -206,42 +206,42 @@ public:
     }
 
     void SetHighWaterMark(const WaterMarkInfos &high_water) {
-        tbb::mutex::scoped_lock lock(water_mutex_);
+        std::scoped_lock lock(water_mutex_);
         watermarks_.SetHighWaterMark(high_water);
     }
 
     void SetHighWaterMark(const WaterMarkInfo& hwm_info) {
-        tbb::mutex::scoped_lock lock(water_mutex_);
+        std::scoped_lock lock(water_mutex_);
         watermarks_.SetHighWaterMark(hwm_info);
     }
 
     void ResetHighWaterMark() {
-        tbb::mutex::scoped_lock lock(water_mutex_);
+        std::scoped_lock lock(water_mutex_);
         watermarks_.ResetHighWaterMark();
     }
 
     WaterMarkInfos GetHighWaterMark() const {
-        tbb::mutex::scoped_lock lock(water_mutex_);
+        std::scoped_lock lock(water_mutex_);
         return watermarks_.GetHighWaterMark();
     }
 
     void SetLowWaterMark(const WaterMarkInfos &low_water) {
-        tbb::mutex::scoped_lock lock(water_mutex_);
+        std::scoped_lock lock(water_mutex_);
         watermarks_.SetLowWaterMark(low_water);
      }
 
     void SetLowWaterMark(const WaterMarkInfo& lwm_info) {
-        tbb::mutex::scoped_lock lock(water_mutex_);
+        std::scoped_lock lock(water_mutex_);
         watermarks_.SetLowWaterMark(lwm_info);
      }
 
     void ResetLowWaterMark() {
-        tbb::mutex::scoped_lock lock(water_mutex_);
+        std::scoped_lock lock(water_mutex_);
         watermarks_.ResetLowWaterMark();
     }
 
     WaterMarkInfos GetLowWaterMark() const {
-        tbb::mutex::scoped_lock lock(water_mutex_);
+        std::scoped_lock lock(water_mutex_);
         return watermarks_.GetLowWaterMark();
     }
 
@@ -279,7 +279,7 @@ public:
     }
 
     void MayBeStartRunner() {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         if (running_ || queue_.empty() || deleted_ || RunnerAbortLocked()) {
             return;
         }
@@ -399,7 +399,7 @@ private:
     }
 
     bool DequeueInternalLocked(QueueEntryT *entry) {
-        tbb::mutex::scoped_lock lock(water_mutex_);
+        std::scoped_lock lock(water_mutex_);
         return DequeueInternal(entry);
     }
 
@@ -429,11 +429,11 @@ private:
     }
 
     size_t AtomicIncrementQueueCount(QueueEntryT *entry) {
-        return count_.fetch_and_increment() + 1;
+        return count_.fetch_add(1) + 1;
     }
 
     size_t AtomicDecrementQueueCount(QueueEntryT *entry) {
-        return count_.fetch_and_decrement() - 1;
+        return count_.fetch_sub(1) - 1;
     }
 
     void ProcessHighWaterMarks(size_t count) {
@@ -456,7 +456,7 @@ private:
     }
 
     bool EnqueueInternalLocked(QueueEntryT entry) {
-        tbb::mutex::scoped_lock lock(water_mutex_);
+        std::scoped_lock lock(water_mutex_);
         return EnqueueInternal(entry);
     }
 
@@ -478,7 +478,7 @@ private:
     }
 
     bool EnqueueBoundedLocked(QueueEntryT entry) {
-        tbb::mutex::scoped_lock lock(water_mutex_);
+        std::scoped_lock lock(water_mutex_);
         return EnqueueBounded(entry);
     }
 
@@ -488,12 +488,12 @@ private:
     }
 
     bool RunnerAbort() {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         return RunnerAbortLocked();
     }
 
     bool RunnerDone() {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         bool done = false;
         if (queue_.empty() || RunnerAbortLocked()) {
             done = true;
@@ -511,8 +511,8 @@ private:
     }
 
     Queue queue_;
-    tbb::atomic<size_t> count_;
-    tbb::mutex mutex_;
+    std::atomic<size_t> count_;
+    std::mutex mutex_;
     bool running_;
     int taskId_;
     int taskInstance_;
@@ -523,7 +523,7 @@ private:
     StartRunnerFunc start_runner_;
     QueueTaskRunner<QueueEntryT, WorkQueue<QueueEntryT> > *current_runner_;
     size_t on_entry_defer_count_;
-    tbb::atomic<bool> disabled_;
+    std::atomic<bool> disabled_;
     bool deleted_;
     mutable size_t enqueues_;
     mutable size_t dequeues_;
@@ -534,7 +534,7 @@ private:
     bool shutdown_scheduled_;
     bool delete_entries_on_shutdown_;
     WaterMarkTuple watermarks_;
-    mutable tbb::mutex water_mutex_;
+    mutable std::mutex water_mutex_;
     mutable uint32_t task_starts_;
     mutable size_t max_queue_len_;
     mutable uint64_t busy_time_;

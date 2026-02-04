@@ -6,6 +6,7 @@
 #define BASE_FEATURE_FLAGS_H_
 
 #include <string>
+#include <mutex>
 
 #include <boost/function.hpp>
 #include <boost/scoped_ptr.hpp>
@@ -17,8 +18,6 @@
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
-
-#include <tbb/mutex.h>
 
 /**
  * -----------------------------------------------------------------------------
@@ -568,7 +567,7 @@ private:
     FlagConfigVec GetFlagInfosUnlocked() const;
 
     static boost::scoped_ptr<FlagManager> instance_;
-    mutable tbb::mutex mutex_;
+    mutable std::mutex mutex_;
 
     FlagMap flag_map_; // map for capability-list/user-config
     InterestMap int_map_; // map for storing module interest

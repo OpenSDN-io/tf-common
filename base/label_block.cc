@@ -20,7 +20,7 @@ LabelBlockManager::~LabelBlockManager() {
 }
 
 LabelBlockPtr LabelBlockManager::LocateBlock(uint32_t first, uint32_t last) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
 
     for (LabelBlockList::iterator it = blocks_.begin();
          it != blocks_.end(); ++it) {
@@ -47,7 +47,7 @@ void LabelBlockManager::RemoveBlock(LabelBlock *block) {
 }
 
 size_t LabelBlockManager::size() {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     return blocks_.size();
 }
 
@@ -75,7 +75,7 @@ LabelBlock::~LabelBlock() {
 }
 
 uint32_t LabelBlock::AllocateLabel() {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
 
     size_t pos;
     for (int idx = 0; idx < 2; prev_pos_ = BitSet::npos, idx++) {
@@ -96,7 +96,7 @@ uint32_t LabelBlock::AllocateLabel() {
 }
 
 void LabelBlock::ReleaseLabel(uint32_t value) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
 
     assert(value >= first_ && value <= last_);
     size_t pos = value - first_;

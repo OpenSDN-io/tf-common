@@ -11,10 +11,10 @@
 #ifndef __SANDESH_CLIENT_SM_PRIV_H__
 #define __SANDESH_CLIENT_SM_PRIV_H__
 
+#include <mutex>
+
 #include <boost/asio.hpp>
 #include <boost/statechart/state_machine.hpp>
-#include <tbb/mutex.h>
-#include <tbb/atomic.h>
 
 #include "base/queue_task.h"
 #include "base/timer.h"
@@ -118,16 +118,16 @@ public:
     }
 
     void set_last_event(const std::string &event) {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         last_event_ = event;
         last_event_at_ = UTCTimestampUsec();
     }
     const std::string last_event() const {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         return last_event_;
     }
     void reset_last_info() {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         last_state_ = IDLE;
         last_event_ = "";
     }
@@ -180,7 +180,7 @@ private:
     std::string last_event_;
     uint64_t last_event_at_;
     std::string coll_name_;
-    mutable tbb::mutex mutex_;
+    mutable std::mutex mutex_;
     std::string generator_key_;
     SandeshEventStatistics event_stats_;
 

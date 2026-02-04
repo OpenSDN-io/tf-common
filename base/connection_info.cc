@@ -72,7 +72,7 @@ void ConnectionState::UpdateInternal(ConnectionType::type ctype,
         g_process_info_constants.ConnectionStatusNames.find(status)->second);
     info.set_description(message);
     // Lookup connection info map
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     ConnectionInfoMap::iterator it = connection_map_.find(key);
     if (it != connection_map_.end()) {
         // Update
@@ -111,7 +111,7 @@ void ConnectionState::Delete(ConnectionType::type ctype,
     // Construct key
     ConnectionInfoKey key(ctype, name);
     // Delete
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     connection_map_.erase(key);
     if (!send_uve_cb_.empty()) {
         send_uve_cb_();
@@ -128,7 +128,7 @@ vector<ConnectionInfo> ConnectionState::GetInfosUnlocked() const {
 }
 
 vector<ConnectionInfo> ConnectionState::GetInfos() const {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     return GetInfosUnlocked();
 }
 

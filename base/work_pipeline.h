@@ -56,6 +56,10 @@
 #define __WORK_PIPELINE_H__
 
 #include <vector>
+#include <limits>
+#include <sstream>
+#include <atomic> 
+
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
@@ -64,9 +68,6 @@
 #include <boost/type_traits.hpp>
 #include <boost/mpl/assert.hpp>
 #include <boost/tuple/tuple.hpp>
-#include <limits>
-#include <sstream>
-#include <tbb/atomic.h> 
 #include "base/task.h"
 
 // When the WorkPipeline is done, it will call this function back
@@ -158,7 +159,7 @@ public:
 
 private:
     uint32_t stage_;
-    tbb::atomic<uint32_t> remainingInst_;
+    std::atomic<uint32_t> remainingInst_;
     FinFn finFn_;
     boost::shared_ptr<InputT> inp_;
     boost::shared_ptr<ResultT> res_;

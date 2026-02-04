@@ -17,13 +17,12 @@
 //
 
 #include <boost/utility.hpp>
+#include <atomic>
 #include <utility>
-#include <tbb/atomic.h>
 #include "base/logging.h"
 #include "base/task.h"
 #include <queue>
 #include <boost/assign/list_of.hpp>
-#include "tbb/mutex.h"
 
 #include "sandesh/sandesh_types.h"
 #include "sandesh.h"
@@ -53,7 +52,7 @@ private:
     boost::ptr_vector<StageImpl> stageImpls_;
     int currentStage_;
 
-    static tbb::mutex mutex_;
+    static std::mutex mutex_;
     static int activePipes_;
     static queue<PipeImpl*> pendPipes_;
 };
@@ -66,12 +65,12 @@ public:
     // Decrement the number of outstanding instances.
     // Returns "true" when there are no instances left.
     bool DecrInst() {
-        int prev = remainingInst_.fetch_and_decrement();
+        int prev = remainingInst_.fetch_sub(1);
         return (prev == 1 ? true : false);
     }
 
     StageData data_;
-    tbb::atomic<int> remainingInst_;
+    std::atomic<int> remainingInst_;
 };
 
 class RequestPipeline::StageWorker : public Task {
@@ -93,7 +92,7 @@ private:
     const int instNum_;
 };
 
-tbb::mutex  RequestPipeline::PipeImpl::mutex_;
+std::mutex  RequestPipeline::PipeImpl::mutex_;
 int RequestPipeline::PipeImpl::activePipes_ = 0;
 queue<RequestPipeline::PipeImpl*> RequestPipeline::PipeImpl::pendPipes_;
 
@@ -115,7 +114,7 @@ RequestPipeline::PipeSpec::GetStageData(int stage) const {
 RequestPipeline::PipeImpl::PipeImpl(const PipeSpec &spec) :
         spec_(spec, this), currentStage_(-1) {
 
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     if (activePipes_ < 1) {
         activePipes_++;
         NextStage();
@@ -139,7 +138,7 @@ RequestPipeline::PipeImpl::NextStage(void) {
     if (currentStage_ == static_cast<int>(spec_.stages_.size())) {
         delete this;
         {
-            tbb::mutex::scoped_lock lock(mutex_);
+            std::scoped_lock lock(mutex_);
             if (!pendPipes_.empty()) {
                 PipeImpl * pipe = pendPipes_.front();
                 pendPipes_.pop();

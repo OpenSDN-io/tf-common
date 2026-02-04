@@ -5,11 +5,13 @@
 #ifndef __HTTP_CLIENT_H__
 #define __HTTP_CLIENT_H__
 
+#include <mutex>
+#include <string>
+
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/function.hpp>
 #include <boost/ptr_container/ptr_map.hpp>
 #include <boost/system/error_code.hpp>
-#include <string>
 #include <curl/curl.h>
 #include "base/queue_task.h"
 #include "base/timer.h"
@@ -46,14 +48,14 @@ public:
 
     void SetConnection(HttpConnection *conn) { connection_ = conn; }
     HttpConnection *Connection() { return connection_; }
-    tbb::mutex &mutex() { return mutex_; }
+    std::mutex &mutex() { return mutex_; }
 
 private:
     void OnEvent(TcpSession *session, Event event);
     void OnEventInternal(TcpSessionPtr session, Event event);
     HttpConnection *connection_;
     uint32_t delete_called_;
-    tbb::mutex mutex_;
+    std::mutex mutex_;
     SessionEventCb event_cb_;
 
     DISALLOW_COPY_AND_ASSIGN(HttpClientSession);
@@ -97,7 +99,7 @@ public:
     std::map<CURLoption, int> *curl_options() { return &curl_options_; }
     HttpClient *client() { return client_; }
     HttpClientSession *session() { return session_; }
-    tbb::mutex &mutex() { return mutex_; }
+    std::mutex &mutex() { return mutex_; }
     boost::asio::ip::tcp::endpoint endpoint() { return endpoint_; }
     size_t id() { return id_; }
 
@@ -157,7 +159,7 @@ private:
     std::map<CURLoption, int> curl_options_;
     HttpClientSession *session_;
     HttpClient *client_;
-    mutable tbb::mutex mutex_;
+    mutable std::mutex mutex_;
     HttpClientSession::SessionEventCb event_cb_;
     int status_;
     std::string version_;

@@ -824,9 +824,8 @@ void SandeshClientSMImpl::UpdateEventDequeueFail(const sc::event_base &event) {
 void SandeshClientSMImpl::UpdateEventStats(const sc::event_base &event,
         bool enqueue, bool fail) {
     std::string event_name(TYPE_NAME(event));
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     event_stats_.Update(event_name, enqueue, fail);
-    lock.release();
 }
 
 bool SandeshClientSMImpl::DequeueEvent(SandeshClientSMImpl::EventContainer ec) {
@@ -919,7 +918,7 @@ SandeshClientSMImpl::SandeshClientSMImpl(EventManager *evm, Mgr *mgr,
 }
 
 SandeshClientSMImpl::~SandeshClientSMImpl() {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
 
     assert(!deleted_);
     deleted_ = true;
@@ -968,9 +967,10 @@ bool SandeshClientSMImpl::StatisticsTimerExpired() {
         return true;
     }
     std::vector<SandeshStateMachineEvStats> ev_stats;
-    tbb::mutex::scoped_lock lock(mutex_);
-    event_stats_.Get(&ev_stats);
-    lock.release();
+    {
+        std::scoped_lock lock(mutex_);
+        event_stats_.Get(&ev_stats);
+    }
     // Send the message
     ModuleClientState mcs;
     mcs.set_name(generator_key_);

@@ -11,11 +11,12 @@
 #ifndef __SANDESH_STATE_MACHINE_H__
 #define __SANDESH_STATE_MACHINE_H__
 
+#include <atomic>
+#include <mutex>
+
 #include <boost/asio.hpp>
 #include <boost/ptr_container/ptr_map.hpp>
 #include <boost/statechart/state_machine.hpp>
-#include <tbb/mutex.h>
-#include <tbb/atomic.h>
 
 #include <base/queue_task.h>
 #include <base/timer.h>
@@ -123,16 +124,16 @@ public:
     }
 
     void set_last_event(const std::string &event) {
-        tbb::mutex::scoped_lock lock(smutex_);
+        std::scoped_lock lock(smutex_);
         last_event_ = event;
         last_event_at_ = UTCTimestampUsec();
     }
     const std::string last_event() const {
-        tbb::mutex::scoped_lock lock(smutex_);
+        std::scoped_lock lock(smutex_);
         return last_event_;
     }
     void reset_last_info() {
-        tbb::mutex::scoped_lock lock(smutex_);
+        std::scoped_lock lock(smutex_);
         last_state_ = ssm::IDLE;
         last_event_ = "";
     }
@@ -200,7 +201,7 @@ private:
     bool IsValid() const;
 
     const char *prefix_;
-    mutable tbb::mutex smutex_;
+    mutable std::mutex smutex_;
     typedef WorkQueue<EventContainer> EventQueue;
     EventQueue work_queue_;
     SandeshConnection *connection_;
@@ -208,7 +209,7 @@ private:
     Timer *idle_hold_timer_;
     int idle_hold_time_;
     bool deleted_;
-    tbb::atomic<ssm::SsmState> state_;
+    std::atomic<ssm::SsmState> state_;
     bool resource_;
     ssm::SsmState last_state_;
     uint64_t state_since_;

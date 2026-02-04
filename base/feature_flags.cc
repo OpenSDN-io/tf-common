@@ -248,7 +248,7 @@ void FlagManager::Set(const string &name, const string &version,
 
     FlagConfig flag_cfg(name, version, enabled, state, context_infos);
 
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     flag_map_itr fmap_itr = flag_map_.find(name);
     if (fmap_itr != flag_map_.end()) {
         /**
@@ -410,7 +410,7 @@ void FlagManager::Register(Flag *flag) {
     int_map_itr itr;
     flag_map_citr fitr;
 
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
 
     string name = flag->name();
 
@@ -446,7 +446,7 @@ void FlagManager::Unregister(const Flag *flag) {
     FLAG_DEBUG("Module not interested in flag. Name: " << name <<
                " \nRemoving from InterestMap");
 
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
 
     int_map_itr it = ret.first;
     while (it != ret.second) {
@@ -462,7 +462,7 @@ void FlagManager::Unregister(const Flag *flag) {
 bool FlagManager::IsRegistered(const Flag *flag) const {
     pair <int_map_const_itr, int_map_const_itr> ret;
 
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
 
     ret = int_map_.equal_range(flag->name());
     for (int_map_const_itr it = ret.first; it != ret.second; ++it) {
@@ -498,7 +498,7 @@ FlagConfigVec FlagManager::GetFlagInfosUnlocked() const {
 }
 
 FlagConfigVec FlagManager::GetFlagInfos() const {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     return GetFlagInfosUnlocked();
 }
 

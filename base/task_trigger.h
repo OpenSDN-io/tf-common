@@ -5,8 +5,9 @@
 #ifndef __ctrlplane__task_trigger__
 #define __ctrlplane__task_trigger__
 
+#include <atomic>
+
 #include <boost/function.hpp>
-#include <tbb/atomic.h>
 
 class TaskTrigger {
 public:
@@ -17,11 +18,11 @@ public:
     void Reset();
     // For Test only
     void set_disable() {
-        bool current = disabled_.fetch_and_store(true);
+        bool current = disabled_.exchange(true);
         assert(!current);
     }
     void set_enable() {
-        bool current = disabled_.fetch_and_store(false);
+        bool current = disabled_.exchange(false);
         assert(current);
         Set();
     }
@@ -31,11 +32,11 @@ public:
 
     // For Test only
     void set_deferred() {
-        bool current = deferred_.fetch_and_store(true);
+        bool current = deferred_.exchange(true);
         assert(!current);
     }
     void clear_deferred() {
-        bool current = deferred_.fetch_and_store(false);
+        bool current = deferred_.exchange(false);
         assert(current);
     }
     bool deferred() const { return deferred_; }
@@ -47,9 +48,9 @@ private:
     FunctionPtr func_;
     int task_id_;
     int task_instance_;
-    tbb::atomic<bool> trigger_;
-    tbb::atomic<bool> disabled_;
-    tbb::atomic<bool> deferred_;
+    std::atomic<bool> trigger_;
+    std::atomic<bool> disabled_;
+    std::atomic<bool> deferred_;
 };
 
 #endif /* defined(__ctrlplane__task_trigger__) */

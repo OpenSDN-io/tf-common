@@ -5,6 +5,8 @@
 #ifndef SRC_IO_SSL_SESSION_H_
 #define SRC_IO_SSL_SESSION_H_
 
+#include <mutex>
+
 #include "io/tcp_session.h"
 #include "io/ssl_server.h"
 
@@ -36,7 +38,7 @@ public:
     }
 
     bool IsSslHandShakeSuccess() {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         return ssl_handshake_success_;
     }
 
@@ -45,12 +47,12 @@ public:
     }
 
     bool IsSslHandShakeInProgress() {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         return ssl_handshake_in_progress_;
     }
 
     void SetSslHandShakeInProgress(bool state) {
-       tbb::mutex::scoped_lock lock(mutex_);
+       std::scoped_lock lock(mutex_);
        ssl_handshake_in_progress_ = state;
     }
 
@@ -78,12 +80,12 @@ private:
         SslSessionPtr, const boost::system::error_code &error);
 
     void SetSslHandShakeSuccess() {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         ssl_handshake_success_ = true;
     }
 
     void SetSslHandShakeFailure() {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         ssl_handshake_success_ = false;
     }
     virtual size_t GetReadBufferSize() const;

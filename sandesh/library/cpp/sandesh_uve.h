@@ -14,11 +14,12 @@
 
 #include <map>
 #include <vector>
+#include <mutex>
+
 #include <boost/ptr_container/ptr_map.hpp>
 #include <boost/assign/ptr_map_inserter.hpp>
 #include <sandesh/sandesh_types.h>
 #include <sandesh/sandesh.h>
-#include <tbb/mutex.h>
 #include <tbb/concurrent_hash_map.h>
 #include <boost/functional/hash.hpp>
 
@@ -141,14 +142,13 @@ public:
     bool UpdateUVE(U& data, uint32_t seqnum, uint64_t mono_usec,
                    SandeshLevel::type level) {
         bool send = false;
-        tbb::mutex::scoped_lock lock;
         const std::string &table = data.table_;
         assert(!table.empty());
         const std::string &s = data.get_name();
         if (!mono_usec) mono_usec = ClockMonotonicUsec();
 
         // pickup DS Config
-        lock.acquire(uve_mutex_);
+        std::unique_lock<std::mutex> lock(uve_mutex_);
         std::map<string,string> dsconf = dsconf_;
 
         // If we are going to erase, we need a global lock
@@ -156,7 +156,7 @@ public:
         // To prevent deadlock, we always acquire global lock
         // before accessor
         if (!data.get_deleted()) {
-            lock.release();
+            lock.unlock();
         }
         typename uve_cmap::accessor a;
 
@@ -188,7 +188,7 @@ public:
         if (data.get_deleted()) {
             a->second.erase(imapentry);
             if (a->second.empty()) cmap_.erase(a);
-            lock.release();
+            lock.unlock();
         }
 
         return send;
@@ -199,7 +199,7 @@ public:
     uint32_t ClearUVEs(void) {
 
         // Global lock is needed for iterator
-        tbb::mutex::scoped_lock lock(uve_mutex_);
+        std::scoped_lock lock(uve_mutex_);
         uint32_t count = 0;
         (const_cast<SandeshUVEPerTypeMapImpl<T,U,P,TM> *>(this))->cmap_.rehash();
         typename uve_cmap::iterator git = cmap_.begin();
@@ -227,7 +227,7 @@ public:
     bool InitDerivedStats(const std::map<std::string,std::string> & dsconf) {
 
         // Global lock is needed for iterator
-        tbb::mutex::scoped_lock lock(uve_mutex_);
+        std::scoped_lock lock(uve_mutex_);
 
         // Copy the existing configuration
         // We will be replacing elements in it.
@@ -273,7 +273,7 @@ public:
             uint32_t seqno, uint32_t cycle,
             const std::string &ctx) {
         // Global lock is needed for iterator
-        tbb::mutex::scoped_lock lock(uve_mutex_);
+        std::scoped_lock lock(uve_mutex_);
         uint32_t count = 0;
         (const_cast<SandeshUVEPerTypeMapImpl<T,U,P,TM> *>(this))->cmap_.rehash();
         typename uve_cmap::iterator git = cmap_.begin();
@@ -343,7 +343,7 @@ private:
 
     uve_cmap cmap_;
     std::map<std::string, std::string> dsconf_;
-    mutable tbb::mutex uve_mutex_;
+    mutable std::mutex uve_mutex_;
 };
 
 #define SANDESH_UVE_DEF(x,y,z,w) \
@@ -381,7 +381,7 @@ public:
         if (name == std::string("")){
             return(nativep_);
         }
-        tbb::mutex::scoped_lock lock(nmutex_);
+        std::scoped_lock lock(nmutex_);
         if (native_group_map_.find(name) == native_group_map_.end()) {
             uve_emap* ne = new uve_emap;
             std::string native_name(name);
@@ -392,7 +392,7 @@ public:
 
     // Get the Native UVE and Native proxy UVE maps for this Native type
     std::vector<uve_emap*> GetNMaps(void) {
-        tbb::mutex::scoped_lock lock(nmutex_);
+        std::scoped_lock lock(nmutex_);
         std::vector<uve_emap *> nev;
         for (typename uve_nmap::iterator uni = native_group_map_.begin();
                 uni != native_group_map_.end(); uni++) {
@@ -403,7 +403,7 @@ public:
 
     // Get the partition UVE Type maps for the given proxy group
     uve_pmap *GetGMap(const std::string& proxy) {
-        tbb::mutex::scoped_lock lock(gmutex_);
+        std::scoped_lock lock(gmutex_);
         if (group_map_.find(proxy) == group_map_.end()) {
             uve_pmap* up = new uve_pmap;
             std::string kstring(proxy);
@@ -417,7 +417,7 @@ public:
 
     // Get the partition UVE Type maps for all proxy groups
     std::vector<uve_pmap *> GetGMaps(void) {
-        tbb::mutex::scoped_lock lock(gmutex_);
+        std::scoped_lock lock(gmutex_);
         std::vector<uve_pmap *> pv;
         for (typename uve_gmap::iterator ugi = group_map_.begin();
                 ugi != group_map_.end(); ugi++) {
@@ -505,7 +505,7 @@ public:
     // Delete all UVEs for the given partition for the given proxy group
     uint32_t ClearUVEs(const std::string& proxy, int partition) {
         if (partition != -1) {
-            tbb::mutex::scoped_lock lock(gmutex_);
+            std::scoped_lock lock(gmutex_);
             typename uve_gmap::iterator gi = group_map_.find(proxy);
             if (gi != group_map_.end()) {
                 assert(partition < SandeshUVETypeMaps::kProxyPartitions);
@@ -516,9 +516,9 @@ public:
     }
 
 private:
-    mutable tbb::mutex gmutex_;
+    mutable std::mutex gmutex_;
     uve_gmap group_map_;
-    mutable tbb::mutex nmutex_;
+    mutable std::mutex nmutex_;
     uve_nmap native_group_map_;
     uve_emap *nativep_;
 };

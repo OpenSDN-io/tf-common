@@ -5,8 +5,11 @@
 #ifndef SRC_IO_UDP_SERVER_H_
 #define SRC_IO_UDP_SERVER_H_
 
+#include <atomic>
 #include <string>
 #include <vector>
+#include <mutex>
+
 #include <boost/asio.hpp>
 #include <boost/intrusive_ptr.hpp>
 #include "io/event_manager.h"
@@ -124,10 +127,10 @@ private:
     EventManager *evm_;
     std::string name_;
     boost::asio::ip::udp::endpoint remote_endpoint_;
-    tbb::mutex state_guard_;
-    tbb::mutex pbuf_guard_;
+    std::mutex state_guard_;
+    std::mutex pbuf_guard_;
     std::vector<uint8_t *> pbuf_;
-    tbb::atomic<int> refcount_;
+    std::atomic<int> refcount_;
     io::SocketStats stats_;
 
     DISALLOW_COPY_AND_ASSIGN(UdpServer);
@@ -136,11 +139,11 @@ private:
 typedef boost::intrusive_ptr<UdpServer> UdpServerPtr;
 
 inline void intrusive_ptr_add_ref(UdpServer *server) {
-    server->refcount_.fetch_and_increment();
+    server->refcount_.fetch_add(1);
 }
 
 inline void intrusive_ptr_release(UdpServer *server) {
-    int prev = server->refcount_.fetch_and_decrement();
+    int prev = server->refcount_.fetch_sub(1);
     if (prev == 1) {
         delete server;
     }

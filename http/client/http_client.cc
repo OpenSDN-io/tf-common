@@ -12,7 +12,6 @@
 #include "http_curl.h"
 
 using namespace std;
-using tbb::mutex;
 
 HttpClientSession::HttpClientSession(HttpClient *client, Socket *socket) 
     : TcpSession(client, socket) , delete_called_(0) {
@@ -118,7 +117,7 @@ void HttpConnection::delete_session() {
     HttpClientSession *session = session_;
     if (session_) {
         {
-            tbb::mutex::scoped_lock lock(session_->mutex());
+            std::scoped_lock lock(session_->mutex());
             session_->SetConnection(NULL);
             session_ = NULL;
         }

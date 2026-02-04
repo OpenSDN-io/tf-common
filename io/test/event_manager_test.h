@@ -5,11 +5,12 @@
 #ifndef __EVENT_MANAGER_TEST_H__
 #define __EVENT_MANAGER_TEST_H__
 
+#include <atomic>
+
 #include "io/event_manager.h"
 
 #include <boost/scoped_ptr.hpp>
 #include <boost/thread.hpp>
-#include <tbb/atomic.h>
 
 #include "base/logging.h"
 #include "base/task.h"
@@ -44,7 +45,7 @@ public:
 
 private:
     boost::scoped_ptr<boost::thread> thread_;
-    tbb::atomic<bool> running_;
+    std::atomic<bool> running_;
     EventManager *evm_;
     boost::scoped_ptr<tbb::task_scheduler_init> tbb_scheduler_;
 };

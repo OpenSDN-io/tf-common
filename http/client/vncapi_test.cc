@@ -5,6 +5,7 @@
 #include <boost/bind.hpp>
 #include "base/util.h"
 #include "base/test/task_test_util.h"
+#include <atomic>
 #include <iostream>
 #include <rapidjson/stringbuffer.h>
 
@@ -73,7 +74,7 @@ class Controller {
     Timer *poll_timer_;
     bool done_it_;
     boost::scoped_ptr<VncApi> vnc_;
-    tbb::atomic<bool> more_;
+    std::atomic<bool> more_;
     std::string resp_body_;
     VncApiConfig vnccfg_;
     bool wait_for_done() {

@@ -5,12 +5,12 @@
 #ifndef SRC_IO_TCP_SERVER_H_
 #define SRC_IO_TCP_SERVER_H_
 
-#include <tbb/compat/condition_variable>
-#include <tbb/mutex.h>
-
 #include <map>
+#include <condition_variable>
+#include <mutex>
 #include <set>
 #include <string>
+#include <atomic>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/intrusive_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
@@ -174,13 +174,13 @@ private:
     io::SocketStats stats_;
     EventManager *evm_;
     // mutex protects the session maps
-    mutable tbb::mutex mutex_;
-    tbb::interface5::condition_variable cond_var_;
+    mutable std::mutex mutex_;
+    std::condition_variable cond_var_;
     SessionSet session_ref_;
     SessionMap session_map_;
     std::unique_ptr<Socket> so_accept_;      // socket used in async_accept
     boost::scoped_ptr<boost::asio::ip::tcp::acceptor> acceptor_;
-    tbb::atomic<int> refcount_;
+    std::atomic<int> refcount_;
     std::string name_;
     bool socket_open_failure_;
     int intf_id_;
@@ -191,11 +191,11 @@ private:
 typedef boost::intrusive_ptr<TcpServer> TcpServerPtr;
 
 inline void intrusive_ptr_add_ref(TcpServer *server) {
-    server->refcount_.fetch_and_increment();
+    server->refcount_.fetch_add(1);
 }
 
 inline void intrusive_ptr_release(TcpServer *server) {
-    int prev = server->refcount_.fetch_and_decrement();
+    int prev = server->refcount_.fetch_sub(1);
     if (prev == 1) {
         delete server;
     }

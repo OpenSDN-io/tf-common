@@ -83,7 +83,7 @@ SandeshLevel::type Sandesh::logging_ut_level_ =
 std::string Sandesh::logging_category_;
 EventManager* Sandesh::event_manager_ = NULL;
 SandeshMessageStatistics Sandesh::msg_stats_;
-tbb::mutex Sandesh::stats_mutex_;
+std::mutex Sandesh::stats_mutex_;
 log4cplus::Logger Sandesh::logger_ =
     log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("SANDESH"));
 log4cplus::Logger Sandesh::slo_logger_ =
@@ -92,7 +92,7 @@ log4cplus::Logger Sandesh::sampled_logger_ =
     log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("SAMPLED_SESSION"));
 
 Sandesh::ModuleContextMap Sandesh::module_context_;
-tbb::atomic<uint32_t> Sandesh::sandesh_send_ratelimit_;
+std::atomic<uint32_t> Sandesh::sandesh_send_ratelimit_;
 
 const char *loggingPattern = "%D{%Y-%m-%d %a %H:%M:%S:%Q %Z} "
                              " %h [Thread %t, Pid %i]: %m%n";
@@ -871,39 +871,39 @@ SandeshLevel::type Sandesh::StringToLevel(std::string level) {
 
 void Sandesh::UpdateRxMsgStats(const std::string &msg_name,
                                uint64_t bytes) {
-    tbb::mutex::scoped_lock lock(stats_mutex_);
+    std::scoped_lock lock(stats_mutex_);
     msg_stats_.UpdateRecv(msg_name, bytes);
 }
 
 void Sandesh::UpdateRxMsgFailStats(const std::string &msg_name,
     uint64_t bytes, SandeshRxDropReason::type dreason) {
-    tbb::mutex::scoped_lock lock(stats_mutex_);
+    std::scoped_lock lock(stats_mutex_);
     msg_stats_.UpdateRecvFailed(msg_name, bytes, dreason);
 }
 
 void Sandesh::UpdateTxMsgStats(const std::string &msg_name,
                                uint64_t bytes) {
-    tbb::mutex::scoped_lock lock(stats_mutex_);
+    std::scoped_lock lock(stats_mutex_);
     msg_stats_.UpdateSend(msg_name, bytes);
 }
 
 void Sandesh::UpdateTxMsgFailStats(const std::string &msg_name,
     uint64_t bytes, SandeshTxDropReason::type dreason) {
-    tbb::mutex::scoped_lock lock(stats_mutex_);
+    std::scoped_lock lock(stats_mutex_);
     msg_stats_.UpdateSendFailed(msg_name, bytes, dreason);
 }
 
 void Sandesh::GetMsgStats(
     std::vector<SandeshMessageTypeStats> *mtype_stats,
     SandeshMessageStats *magg_stats) {
-    tbb::mutex::scoped_lock lock(stats_mutex_);
+    std::scoped_lock lock(stats_mutex_);
     msg_stats_.Get(mtype_stats, magg_stats);
 }
 
 void Sandesh::GetMsgStats(
     boost::ptr_map<std::string, SandeshMessageTypeStats> *mtype_stats,
     SandeshMessageStats *magg_stats) {
-    tbb::mutex::scoped_lock lock(stats_mutex_);
+    std::scoped_lock lock(stats_mutex_);
     msg_stats_.Get(mtype_stats, magg_stats);
 }
 
@@ -987,14 +987,14 @@ size_t Sandesh::SandeshQueue::AtomicIncrementQueueCount(
     SandeshElement *element)
  {
         size_t sandesh_size = element->GetSize();
-        return count_.fetch_and_add(sandesh_size) + sandesh_size;
+        return count_.fetch_add(sandesh_size) + sandesh_size;
 }
 
 template<>
 size_t Sandesh::SandeshQueue::AtomicDecrementQueueCount(
     SandeshElement *element) {
         size_t sandesh_size = element->GetSize();
-        return count_.fetch_and_add((size_t)(0-sandesh_size)) - sandesh_size;
+        return count_.fetch_sub(sandesh_size) - sandesh_size;
 }
 
 /*

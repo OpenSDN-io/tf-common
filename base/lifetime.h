@@ -5,8 +5,8 @@
 #ifndef __BASE__LIFETIME_H__
 #define __BASE__LIFETIME_H__
 
-#include <tbb/atomic.h>
-#include <tbb/mutex.h>
+#include <atomic>
+#include <mutex>
 
 #include "base/dependency.h"
 #include "base/queue_task.h"
@@ -166,9 +166,9 @@ private:
     bool shutdown_invoked() { return shutdown_invoked_; }
     void set_shutdown_invoked() { shutdown_invoked_ = true; }
 
-    tbb::mutex mutex_;
+    std::mutex mutex_;
     LifetimeManager *manager_;
-    tbb::atomic<bool> deleted_;
+    std::atomic<bool> deleted_;
     int refcount_;
     bool shutdown_invoked_;
     bool delete_paused_;

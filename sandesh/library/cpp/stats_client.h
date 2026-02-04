@@ -9,7 +9,8 @@
 #ifndef __STATS_CLIENT_H__
 #define __STATS_CLIENT_H__
 
-#include <tbb/mutex.h>
+#include <mutex>
+
 #include <boost/asio.hpp>
 #include <io/udp_server.h>
 #include <sandesh/sandesh.h>
@@ -43,7 +44,7 @@ public:
 private:
     boost::asio::local::datagram_protocol::endpoint stats_server_ep_;
     boost::scoped_ptr<boost::asio::local::datagram_protocol::socket> stats_socket_;
-    tbb::mutex send_mutex_;
+    std::mutex send_mutex_;
     bool is_connected_;
 };
 #endif
@@ -65,7 +66,7 @@ public:
 private:
     UdpServer::Endpoint stats_server_ep_;
     boost::scoped_ptr<UdpServer::Socket> stats_socket_;
-    tbb::mutex send_mutex_;
+    std::mutex send_mutex_;
     bool is_connected_;
 };
 

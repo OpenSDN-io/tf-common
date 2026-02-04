@@ -62,7 +62,7 @@ void SandeshWriter::WriteReady(const boost::system::error_code &ec) {
     }
 
     {
-        tbb::mutex::scoped_lock lock(send_mutex_);
+        std::scoped_lock lock(send_mutex_);
         ready_to_send_ = true;
     }
 
@@ -271,7 +271,7 @@ void SandeshWriter::SendInternal(boost::shared_ptr<TMemoryBuffer> buf) {
     uint8_t  *buffer;
     uint32_t len;
     buf->getBuffer(&buffer, &len);
-    tbb::mutex::scoped_lock lock(send_mutex_);
+    std::scoped_lock lock(send_mutex_);
     ready_to_send_ = session_->Send((const uint8_t *)buffer, len, NULL);
 }
 
@@ -368,7 +368,7 @@ void SandeshSession::OnRead(Buffer buffer) {
 
 bool SandeshSession::SendMsg(SandeshElement element) {
     Sandesh *sandesh = element.snh_;
-    tbb::mutex::scoped_lock lock(send_mutex_);
+    std::scoped_lock lock(send_mutex_);
     if (!IsEstablished()) {
         if (Sandesh::IsLoggingDroppedAllowed(sandesh->type())) {
             SANDESH_LOG(ERROR, __func__ << " Not Connected : Dropping Message: " <<
@@ -392,7 +392,7 @@ bool SandeshSession::SendMsg(SandeshElement element) {
 }
 
 bool SandeshSession::SendBuffer(boost::shared_ptr<TMemoryBuffer> sbuffer) {
-    tbb::mutex::scoped_lock lock(send_mutex_);
+    std::scoped_lock lock(send_mutex_);
     if (!IsEstablished()) {
         increment_send_buffer_fail();
         return true;
@@ -444,7 +444,7 @@ void SandeshSession::EnqueueClose() {
     if (IsClosed()) {
         return;
     }
-    tbb::mutex::scoped_lock lock(conn_mutex_);
+    std::scoped_lock lock(conn_mutex_);
     if (connection_) {
         connection_->state_machine()->OnSessionEvent(this,
             TcpSession::CLOSE);
@@ -575,7 +575,7 @@ bool SandeshReader::ExtractMsg(Buffer buffer, int *result, bool NewBuf) {
 }
 
 void SandeshReader::OnRead(Buffer buffer) {
-    tbb::mutex::scoped_lock lock(cb_mutex_);
+    std::scoped_lock lock(cb_mutex_);
     // Check if session is being deleted, then drop the packet
     if (cb_.empty()) {
         SANDESH_LOG(ERROR, __func__ <<
@@ -643,6 +643,6 @@ void SandeshReader::OnRead(Buffer buffer) {
 }
 
 void SandeshReader::SetReceiveMsgCb(SandeshReceiveMsgCb cb) {
-    tbb::mutex::scoped_lock lock(cb_mutex_);
+    std::scoped_lock lock(cb_mutex_);
     cb_ = cb;
 }

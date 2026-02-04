@@ -5,10 +5,12 @@
 #ifndef __TRACE_H__
 #define __TRACE_H__
 
-#include <tbb/mutex.h>
+#include <atomic>
+#include <mutex>
 #include <map>
 #include <vector>
 #include <stdexcept>
+
 #include <boost/function.hpp>
 #include <boost/ptr_container/ptr_circular_buffer.hpp>
 #include <boost/weak_ptr.hpp>
@@ -86,7 +88,7 @@ public:
 
     /// Writes the provided data into the circular buffer.
     void TraceWrite(TraceEntryT *trace_entry) {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
 
         // Add the trace
         trace_buf_.push_back(trace_entry);
@@ -125,9 +127,9 @@ public:
 
     /// Returns the next sequence number.
     uint32_t GetNextSeqNum() {
-        uint32_t nseqno(seqno_.fetch_and_increment());
+        uint32_t nseqno(seqno_.fetch_add(1));
         // Reset seqno_ if it reaches max value
-        if (nseqno > kMaxSeqno) {
+        if (nseqno+1 >= kMaxSeqno) {
             seqno_ = kMinSeqno;
         }
         return nseqno;
@@ -137,7 +139,7 @@ public:
     /// is submitted into the specified callback function.
     void TraceRead(const std::string& context, const int count,
             boost::function<void (TraceEntryT *, bool)> cb) {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         if (trace_buf_.empty()) {
             // No message in the trace buffer
             return;
@@ -181,7 +183,7 @@ public:
     /// The member function is called to complete the reading of the
     /// circular buffer data.
     void TraceReadDone(const std::string& context) {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         ReadContextMap::iterator context_it =
             read_context_map_.find(context);
         if (context_it != read_context_map_.end()) {
@@ -209,7 +211,7 @@ private:
 
     /// A flag to determine whether the trace buffer is enabled (ready
     /// for reading and writing).
-    tbb::atomic<bool> trace_enable_;
+    std::atomic<bool> trace_enable_;
 
     /// Points to the position in the trace buffer
     /// where the next trace message would be added
@@ -226,11 +228,11 @@ private:
     ReadContextMap read_context_map_;
 
     /// Stores the current sequence number.
-    tbb::atomic<uint32_t> seqno_;
+    std::atomic<uint32_t> seqno_;
 
     /// Used to restrict simulateneous access to the trace buffer data
     /// from 2 threads
-    tbb::mutex mutex_;
+    std::mutex mutex_;
 
     /// Reserves max(uint32_t)
     static const uint32_t kMaxSeqno = ((2 ^ 32) - 1) - 1;
@@ -251,14 +253,14 @@ public:
 
     /// Creates a new instance of this class using the given trace buffer table
     /// and a mutex object.
-    explicit TraceBufferDeleter(TraceBufMap &trace_buf_map, tbb::mutex &mutex) :
+    explicit TraceBufferDeleter(TraceBufMap &trace_buf_map, std::mutex &mutex) :
             trace_buf_map_(trace_buf_map),
             mutex_(mutex) {
     }
 
     /// Performs the deletion of the trace buffer from the given map.
     void operator()(TraceBuffer<TraceEntryT> *trace_buffer) const {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         for (typename TraceBufMap::iterator it = trace_buf_map_.begin();
              it != trace_buf_map_.end();
              it++) {
@@ -276,7 +278,7 @@ private:
     TraceBufMap &trace_buf_map_;
 
     /// A reference to the mutex object.
-    tbb::mutex &mutex_;
+    std::mutex &mutex_;
 };
 
 /// The table for managing trace buffers using a map between their names
@@ -315,7 +317,7 @@ public:
     /// Returns a pointer to the trace buffer associated with the given name.
     /// If there is no such a trace buffer, then an empty one is returned.
     boost::shared_ptr<TraceBuffer<TraceEntryT> > TraceBufGet(const std::string& buf_name) {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         typename TraceBufMap::iterator it = trace_buf_map_.find(buf_name);
         if (it != trace_buf_map_.end()) {
             return it->second.lock();
@@ -332,7 +334,7 @@ public:
         if (!size) {
             return boost::shared_ptr<TraceBuffer<TraceEntryT> >();
         }
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         typename TraceBufMap::iterator it = trace_buf_map_.find(buf_name);
         if (it == trace_buf_map_.end()) {
             boost::shared_ptr<TraceBuffer<TraceEntryT> > trace_buf(
@@ -346,7 +348,7 @@ public:
 
     /// Requests the list of trace buffers names from the table.
     void TraceBufListGet(std::vector<std::string>& trace_buf_list) {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         typename TraceBufMap::iterator it;
         for (it = trace_buf_map_.begin(); it != trace_buf_map_.end(); ++it) {
             trace_buf_list.push_back(it->first);
@@ -355,7 +357,7 @@ public:
 
     /// Returns the capacity of the trace buffer with the given name.
     size_t TraceBufCapacityGet(const std::string& buf_name) {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         typename TraceBufMap::iterator it = trace_buf_map_.find(buf_name);
         if (it != trace_buf_map_.end()) {
             boost::shared_ptr<TraceBuffer<TraceEntryT> > trace_buf =
@@ -371,7 +373,7 @@ public:
     /// trace buffer is returned.
     boost::shared_ptr<TraceBuffer<TraceEntryT> > TraceBufCapacityReset(
                                     const std::string& buf_name, size_t size) {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         typename TraceBufMap::iterator it = trace_buf_map_.find(buf_name);
         if (it != trace_buf_map_.end()) {
             boost::shared_ptr<TraceBuffer<TraceEntryT> > trace_buf =
@@ -399,13 +401,13 @@ private:
     static Trace *trace_;
 
     /// Determines if the tracing is enabled for the table.
-    tbb::atomic<bool> trace_enable_;
+    std::atomic<bool> trace_enable_;
 
     /// Stores the table of trace buffers.
     TraceBufMap trace_buf_map_;
 
     /// A mutex to protect the table from data races.
-    tbb::mutex mutex_;
+    std::mutex mutex_;
 
     DISALLOW_COPY_AND_ASSIGN(Trace);
 };

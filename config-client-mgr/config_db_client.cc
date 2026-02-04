@@ -165,7 +165,7 @@ void ConfigDbClient::InitConnectionInfo() {
 void ConfigDbClient::UpdateConnectionInfo(bool success,
                                           bool force) {
     bool previous_status =
-              client_connection_up_.fetch_and_store(success);
+              client_connection_up_.exchange(success);
     if ((previous_status == success) && !force) {
         return;
     }

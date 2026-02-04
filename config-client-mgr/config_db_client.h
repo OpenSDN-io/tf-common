@@ -7,6 +7,7 @@
 
 #include <string>
 #include <vector>
+#include <atomic>
 #include <tbb/spin_rw_mutex.h>
 
 #include "base/regex.h"
@@ -143,8 +144,8 @@ private:
     std::vector<int> config_db_ports_;
     FQNameCacheMap fq_name_cache_;
     mutable tbb::spin_rw_mutex rw_mutex_;
-    tbb::atomic<bool> client_connection_up_;
-    tbb::atomic<uint64_t> connection_status_change_at_;
+    std::atomic<bool> client_connection_up_;
+    std::atomic<uint64_t> connection_status_change_at_;
 };
 
 class ObjectCacheEntry {

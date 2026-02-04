@@ -36,7 +36,9 @@
 #ifndef TIMER_H_
 #define TIMER_H_
 
-#include <tbb/mutex.h>
+#include <atomic>
+#include <mutex>
+#include <set>
 
 #include <boost/asio/placeholders.hpp>
 #include <boost/bind.hpp>
@@ -45,7 +47,6 @@
 #include <boost/function.hpp>
 #include <boost/asio.hpp>
 #include <boost/system/error_code.hpp>
-#include <set>
 
 #include <base/task.h>
 
@@ -84,12 +85,12 @@ public:
     bool Cancel();
 
     bool running() const {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         return (state_ == Running);
     }
 
     bool fired() const {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         return (state_ == Fired);
     }
 
@@ -98,12 +99,12 @@ public:
     }
 
     bool cancelled() const {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         return (state_ == Cancelled);
     }
 
     bool Idle() const {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         return (state_ == Cancelled || state_ == Init);
     }
 
@@ -116,7 +117,7 @@ public:
     // Only for state machine test
     // XXX: Don't use in production code
     void Fire() {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         if (handler_ && !handler_.empty()) {
             SetState(Fired);
             handler_();
@@ -163,7 +164,7 @@ private:
     std::string name_;
     Handler handler_;
     ErrorHandler error_handler_;
-    mutable tbb::mutex mutex_;
+    mutable std::mutex mutex_;
     TimerState state_;
     TimerTask *timer_task_;
     int time_;
@@ -171,15 +172,15 @@ private:
     int task_instance_;
     uint32_t seq_no_;
     bool delete_on_completion_;
-    tbb::atomic<int> refcount_;
+    std::atomic<int> refcount_;
 };
 
 inline void intrusive_ptr_add_ref(Timer *timer) {
-    timer->refcount_.fetch_and_increment();
+    timer->refcount_++;
 }
 
 inline void intrusive_ptr_release(Timer *timer) {
-    int prev = timer->refcount_.fetch_and_decrement();
+    int prev = timer->refcount_.fetch_sub(1);
     if (prev == 1) {
         delete timer;
     }
@@ -219,7 +220,7 @@ private:
     typedef std::set<TimerPtr, TimerPtrCmp> TimerSet;
     static void AddTimer(Timer *Timer);
 
-    static tbb::mutex mutex_;
+    static std::mutex mutex_;
     static TimerSet timer_ref_;
 };
 

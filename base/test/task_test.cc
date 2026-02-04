@@ -38,7 +38,7 @@ TestTaskState       task_state[16];
 TestTask            *task_ptr[16];
 bool                task_result[16];
 TaskScheduler       *scheduler;
-tbb::mutex          m1;
+std::mutex          m1;
 int                 expected_state[16][16];
 vector<TestTask *>  task_start_seq_actual;
 vector<TestTask *>  task_start_seq_expected;
@@ -187,7 +187,7 @@ TestWait(int max)
     while (i < (max * 10)) {
         usleep(100000);
         {
-            tbb::mutex::scoped_lock lock(m1);
+            std::scoped_lock lock(m1);
             if (test_done == true) {
                 EXPECT_TRUE(scheduler->IsEmpty());
                 break;
@@ -210,7 +210,7 @@ TestInit(int id, int count, int expects[16][16])
 {
     int i;
     int j;
-    tbb::mutex::scoped_lock lock(m1);
+    std::scoped_lock lock(m1);
 
     for (i = 0; i < 16; i++) {
         task_state[i] = NOT_STARTED;
@@ -234,7 +234,7 @@ TestInit(int id, int count, int expects[16][16])
 void
 TestInit(int id, int count, TestTask *expects[16])
 {
-    tbb::mutex::scoped_lock lock(m1);
+    std::scoped_lock lock(m1);
 
     task_start_seq_actual.clear();
     task_start_seq_expected.clear();
@@ -259,7 +259,7 @@ void TestTask::Validate() {
     task_result[val_] = true;
     for (i = 0; i < task_count; i++) {
         if ((expected_state[val_][i] & task_state[i]) == 0) {
-            tbb::mutex::scoped_lock lock(m1);
+            std::scoped_lock lock(m1);
             cout << "Expect state fail for task " << val_ << " index "
                 << i << ". Expected " << expected_state[val_][i] 
                 << " Got " << task_state[i] << endl;
@@ -271,7 +271,7 @@ void TestTask::Validate() {
     task_state[val_] = FINISHED;
 
     {
-        tbb::mutex::scoped_lock lock(m1);
+        std::scoped_lock lock(m1);
         run_count++;
         if (run_count < task_count) {
             return;
@@ -298,14 +298,14 @@ void TestTask::ValidateTaskStartSeq()
     vector<TestTask *>::iterator it_act;
 
     {
-        tbb::mutex::scoped_lock lock(m1);
+        std::scoped_lock lock(m1);
         task_start_seq_actual.push_back(this);
     }
 
     sleep(sleep_time_);
 
     {
-        tbb::mutex::scoped_lock lock(m1);
+        std::scoped_lock lock(m1);
         run_count++;
         if (run_count < task_count) {
             return;
@@ -338,14 +338,14 @@ void TestTask::ValidateTaskRun()
     vector<TestTask *>::iterator it_act;
 
     {
-        tbb::mutex::scoped_lock lock(m1);
+        std::scoped_lock lock(m1);
         task_start_seq_actual.push_back(this);
     }
 
     sleep(sleep_time_);
 
     {
-        tbb::mutex::scoped_lock lock(m1);
+        std::scoped_lock lock(m1);
         run_count++;
         if (run_count < task_count) {
             return;

@@ -43,7 +43,7 @@ TaskTrigger::~TaskTrigger() {
 }
 
 void TaskTrigger::Set() {
-    bool current = trigger_.fetch_and_store(true);
+    bool current = trigger_.exchange(true);
     if (!current) {
         WorkerTask *task = new WorkerTask(this);
         TaskScheduler *scheduler = TaskScheduler::GetInstance();

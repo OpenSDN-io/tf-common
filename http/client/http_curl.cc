@@ -25,11 +25,8 @@
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <boost/intrusive_ptr.hpp>
-#include <tbb/mutex.h>
 
 #define MSG_OUT stdout /* Send info to stdout, change to stderr if you want */
-
-using tbb::mutex;
 
 const CurlErrorCategory curl_error_category;
 
@@ -129,7 +126,7 @@ static void event_cb_impl(GlobalInfo *g, TcpSessionPtr session, int action,
 static void event_cb(GlobalInfo *g, TcpSessionPtr session, int action,
                      const boost::system::error_code &error, std::size_t bytes_transferred)
 {
-  tbb::mutex::scoped_lock lock(session->mutex());
+  std::scoped_lock lock(session->mutex());
 
   // Ignore if the connection is already deleted.
   if (!session->Connection()) return;
@@ -364,7 +361,7 @@ static int send_perform(ConnInfo *conn, GlobalInfo *g) {
 void del_conn(HttpConnection *connection, GlobalInfo *g) {
 
     if (connection->session()) {
-        tbb::mutex::scoped_lock lock(connection->session()->mutex());
+        std::scoped_lock lock(connection->session()->mutex());
         connection->session()->SetConnection(NULL);
     }
 

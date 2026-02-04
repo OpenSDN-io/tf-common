@@ -5,14 +5,15 @@
 #ifndef config_client_manager_h
 #define config_client_manager_h
 
+#include <atomic>
+#include <set>
+#include <map>
+#include <mutex>
+#include <condition_variable>
+
 #include <boost/function.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/shared_ptr.hpp>
-#include <set>
-#include <map>
-
-#include <tbb/compat/condition_variable>
-#include <tbb/mutex.h>
 
 #include "config_client_options.h"
 #include "config_factory.h"
@@ -128,13 +129,13 @@ private:
     int thread_count_;
     uint64_t generation_number_;
 
-    mutable tbb::mutex end_of_rib_sync_mutex_;
-    tbb::interface5::condition_variable cond_var_;
+    mutable std::mutex end_of_rib_sync_mutex_;
+    std::condition_variable cond_var_;
     uint64_t end_of_rib_computed_at_;
     std::string hostname_;
     std::string module_name_;
     ConfigClientOptions config_options_;
-    tbb::atomic<bool> reinit_triggered_;
+    std::atomic<bool> reinit_triggered_;
     boost::scoped_ptr<TaskTrigger> init_trigger_;
     static bool end_of_rib_computed_;
 };

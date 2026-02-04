@@ -80,7 +80,7 @@ WorkStage<InputT, ResultT, ExternalT, SubResultT>::Runner(void) {
 template<typename InputT, typename ResultT, typename ExternalT, typename SubResultT>
 void
 WorkStage<InputT, ResultT, ExternalT, SubResultT>::WorkProcCb(uint32_t inst, bool ret_code) {
-    uint32_t prev = remainingInst_.fetch_and_decrement();
+    uint32_t prev = remainingInst_.fetch_sub(1);
     if (prev == 1) {
         assert(workers_.size() == tinfo_.size());
         for (uint32_t i = 0; i < workers_.size(); i++) {

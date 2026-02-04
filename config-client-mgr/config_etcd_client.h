@@ -10,6 +10,7 @@
 
 #include "database/etcd/eql_if.h"
 
+#include <atomic>
 #include <list>
 #include <map>
 #include <set>
@@ -247,7 +248,7 @@ private:
     int num_workers_;
     PartitionList partitions_;
     boost::scoped_ptr<TaskTrigger> uuid_reader_;
-    tbb::atomic<long> bulk_sync_status_;
+    std::atomic<long> bulk_sync_status_;
 };
 
 #endif  // config_etcd_client_h

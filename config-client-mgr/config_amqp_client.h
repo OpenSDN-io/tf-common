@@ -5,13 +5,13 @@
 #ifndef config_amqp_client_h
 #define config_amqp_client_h
 
+#include <atomic>
 #include <string>
 #include <vector>
 
 #include <boost/asio/ip/tcp.hpp>
 
 #include <SimpleAmqpClient/SimpleAmqpClient.h>
-#include <tbb/atomic.h>
 
 struct ConfigClientOptions;
 class ConfigClientManager;
@@ -168,8 +168,8 @@ private:
     std::string rabbitmq_ssl_ca_certs_;
     static bool disable_;
     std::vector<Endpoint> endpoints_;
-    tbb::atomic<bool> connection_status_;
-    tbb::atomic<uint64_t> connection_status_change_at_;
+    std::atomic<bool> connection_status_;
+    std::atomic<uint64_t> connection_status_change_at_;
 };
 
 #endif  // config_amqp_client_h

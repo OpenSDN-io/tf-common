@@ -12,10 +12,12 @@
 // - Init and Uninit of HttpServer
 //
 
-#include "io/event_manager.h"
-#include "http/http_server.h"
 #include <cstring>
 #include <cstdlib>
+#include <mutex>
+
+#include "io/event_manager.h"
+#include "http/http_server.h"
 #include <boost/bind.hpp>
 #include <boost/tokenizer.hpp>
 
@@ -101,9 +103,9 @@ HttpSendXML(const std::string& context, const u_int8_t * buf, uint32_t len,
     strncpy(resp_name, reinterpret_cast<const char *>(buf + 1), loc - 1);
     resp_name[loc - 1] = 0;
 
-    static tbb::mutex hmutex;
+    static std::mutex hmutex;
     static int seq = 0;
-    tbb::mutex::scoped_lock lock(hmutex);
+    std::scoped_lock lock(hmutex);
     std::string client_ctx;
     seq++;
 

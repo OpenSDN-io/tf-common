@@ -146,7 +146,7 @@ bool SandeshServer::Initialize(short port, const std::string &ip) {
 }
 
 int SandeshServer::AllocConnectionIndex() {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     size_t bit = conn_bmap_.find_first();
     if (bit == conn_bmap_.npos) {
         bit = conn_bmap_.size();
@@ -157,7 +157,7 @@ int SandeshServer::AllocConnectionIndex() {
 }
 
 void SandeshServer::FreeConnectionIndex(int id) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     conn_bmap_.set(id);
 
     for (size_t i = conn_bmap_.size(); i != 0; i--) {
@@ -208,7 +208,7 @@ bool SandeshServer::Compare(const Endpoint &peer_addr,
 }
 
 SandeshConnection *SandeshServer::FindConnection(const Endpoint &peer_addr) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     SandeshConnectionMap::iterator loc = find_if(connection_.begin(),
             connection_.end(), boost::bind(&SandeshServer::Compare, this,
                                            boost::ref(peer_addr), _1));
@@ -229,13 +229,13 @@ SslSession *SandeshServer::AllocSession(SslSocket *socket) {
 }
 
 void SandeshServer::RemoveConnection(SandeshConnection *connection) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     boost::asio::ip::tcp::endpoint endpoint = connection->endpoint();
     connection_.erase(endpoint);
 }
 
 bool SandeshServer::AcceptSession(TcpSession *session) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     SandeshConnection *connection;
     SandeshSession *ssession = dynamic_cast<SandeshSession *>(session);
     assert(ssession);

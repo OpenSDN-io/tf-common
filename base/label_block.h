@@ -5,9 +5,10 @@
 #ifndef ctrlplane_label_block_h
 #define ctrlplane_label_block_h
 
+#include <atomic>
 #include <vector>
+#include <mutex>
 #include <boost/intrusive_ptr.hpp>
-#include <tbb/mutex.h>
 
 #include "base/bitset.h"
 
@@ -33,7 +34,7 @@ public:
     ~LabelBlockManager();
     LabelBlockPtr LocateBlock(uint32_t first, uint32_t last);
     void RemoveBlock(LabelBlock *block);
-    tbb::mutex &mutex() { return mutex_; }
+    std::mutex &mutex() { return mutex_; }
 
 private:
     friend class LabelBlockTest;
@@ -44,19 +45,20 @@ private:
 
     size_t size();
 
-    tbb::atomic<int> refcount_;
+    std::atomic<int> refcount_;
 
     // The vector of LabelBlocks is protected via the mutex_. This is needed
     // because we need to handle concurrent calls to LocateBlock/RemoveBLock.
-    tbb::mutex mutex_;
+    std::mutex mutex_;
     LabelBlockList blocks_;
 };
 
 inline void intrusive_ptr_add_ref(LabelBlockManager *block_manager) {
-    block_manager->refcount_.fetch_and_increment();
+    block_manager->refcount_++;
 }
+
 inline void intrusive_ptr_release(LabelBlockManager *block_manager) {
-    int prev = block_manager->refcount_.fetch_and_decrement();
+    int prev = block_manager->refcount_.fetch_sub(1);
     if (prev == 1) {
         delete block_manager;
     }
@@ -98,24 +100,24 @@ private:
     LabelBlockManagerPtr block_manager_;
     uint32_t first_, last_;
     size_t prev_pos_;
-    tbb::atomic<int> refcount_;
+    std::atomic<int> refcount_;
 
     // The BitSet of used labels is protected via the mutex_. This is needed
     // since we need to handle concurrent calls to AllocateLabel/ReleaseLabel.
-    tbb::mutex mutex_;
+    std::mutex mutex_;
     BitSet used_bitset_;
 };
 
 inline void intrusive_ptr_add_ref(LabelBlock *block) {
-    block->refcount_.fetch_and_increment();
+    block->refcount_++;
 }
+
 inline void intrusive_ptr_release(LabelBlock *block) {
-    tbb::mutex mutex;
+    std::mutex mutex;
 
-    tbb::mutex::scoped_lock lock(block->block_manager() ?
-                                     block->block_manager()->mutex() : mutex);
+    std::scoped_lock lock(block->block_manager() ? block->block_manager()->mutex() : mutex);
 
-    int prev = block->refcount_.fetch_and_decrement();
+    int prev = block->refcount_.fetch_sub(1);
     if (prev == 1) {
         delete block;
     }

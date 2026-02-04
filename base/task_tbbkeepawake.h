@@ -1,3 +1,5 @@
+#include <mutex>
+
 #include "base/task.h"
 #include "base/timer.h"
 #include <boost/bind.hpp>
@@ -22,7 +24,7 @@ public:
     }
 
     void ModifyTbbKeepAwakeTimeout(uint32_t timeout) {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         if (tbb_awake_val_ != timeout) {
             timeout_changed_ = true;
             tbb_awake_val_ = timeout;
@@ -51,5 +53,5 @@ private:
     uint32_t tbb_awake_val_;
     bool timeout_changed_;
     Timer *tbb_awake_timer_;
-    tbb::mutex mutex_;
+    std::mutex mutex_;
 };

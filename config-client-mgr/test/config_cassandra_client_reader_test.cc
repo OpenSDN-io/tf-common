@@ -7,8 +7,6 @@
 #include <string>
 #include <vector>
 
-#include <tbb/mutex.h>
-
 #include "base/logging.h"
 #include "base/task_annotations.h"
 #include "base/test/task_test_util.h"
@@ -56,7 +54,7 @@ static const string fq_name_uuids[] = {
 };
 static size_t total_uuids = sizeof(fq_name_uuids)/sizeof(fq_name_uuids[0]);
 
-static tbb::mutex mutex_;
+static std::mutex mutex_;
 vector<string> updated;
 vector<string> deleted;
 set<string> updates;
@@ -121,7 +119,7 @@ public:
 
     GenDb::DbDataValueVec *GetTimeStamp() {
         GenDb::DbDataValueVec *ts = new GenDb::DbDataValueVec();
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         ts->push_back(UTCTimestampUsec());
         return ts;
     }
@@ -171,7 +169,7 @@ private:
     const CassColumnKVVec &cass_data_vec, bool add_change) {
         if (cass_data_vec.empty())
             return;
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         if (add_change) {
             updated.push_back(uuid_key);
         } else {
@@ -202,7 +200,7 @@ private:
     const CassColumnKVVec &cass_data_vec, bool add_change) {
         if (cass_data_vec.empty())
             return;
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         if (add_change) {
             updated.push_back(uuid_key);
         } else {
@@ -280,7 +278,7 @@ protected:
     }
 
     bool IsAllExpectedEntriesProcessed() {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         if (updates.size() != updated.size())
             return false;
         if (deletes.size() != deleted.size())
@@ -301,7 +299,7 @@ protected:
     }
 
     void Clear() {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         updates.clear();
         updated.clear();
         deletes.clear();

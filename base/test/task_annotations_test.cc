@@ -7,7 +7,6 @@
 #include <boost/assign.hpp>
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
-#include <tbb/mutex.h>
 
 #include "base/task.h"
 #include "base/logging.h"
@@ -27,7 +26,7 @@ class ExampleType {
 
     void Consume() {
         CHECK_CONCURRENCY("test::consumer");
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         count_--;
     }
 
@@ -35,7 +34,7 @@ class ExampleType {
 
   private:
     int count_;
-    tbb::mutex mutex_;
+    std::mutex mutex_;
 };
 
 class Executer : public Task {

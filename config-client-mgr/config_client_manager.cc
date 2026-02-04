@@ -162,12 +162,12 @@ ConfigAmqpClient *ConfigClientManager::config_amqp_client() const {
 }
 
 bool ConfigClientManager::GetEndOfRibComputed() const {
-    tbb::mutex::scoped_lock lock(end_of_rib_sync_mutex_);
+    std::scoped_lock lock(end_of_rib_sync_mutex_);
     return end_of_rib_computed_;
 }
 
 uint64_t ConfigClientManager::GetEndOfRibComputedAt() const {
-    tbb::mutex::scoped_lock lock(end_of_rib_sync_mutex_);
+    std::scoped_lock lock(end_of_rib_sync_mutex_);
     return end_of_rib_computed_at_;
 }
 
@@ -179,7 +179,7 @@ void ConfigClientManager::EnqueueUUIDRequest(string oper, string obj_type,
 void ConfigClientManager::EndOfConfig() {
     {
         // Notify waiting caller with the result
-        tbb::mutex::scoped_lock lock(end_of_rib_sync_mutex_);
+        std::scoped_lock lock(end_of_rib_sync_mutex_);
         assert(!end_of_rib_computed_);
         end_of_rib_computed_ = true;
         cond_var_.notify_all();
@@ -204,7 +204,7 @@ void ConfigClientManager::EndOfConfig() {
 // AMQP reader task starts consuming messages only after bulk sync.
 // During reinit, the tight loop is broken by triggering the condition variable
 void ConfigClientManager::WaitForEndOfConfig() {
-    tbb::interface5::unique_lock<tbb::mutex> lock(end_of_rib_sync_mutex_);
+    std::unique_lock<std::mutex> lock(end_of_rib_sync_mutex_);
     // Wait for End of config
     while (!end_of_rib_computed_) {
         cond_var_.wait(lock);
@@ -219,7 +219,7 @@ void ConfigClientManager::WaitForEndOfConfig() {
 
 void ConfigClientManager::GetClientManagerInfo(
                                    ConfigClientManagerInfo &info) const {
-    tbb::mutex::scoped_lock lock(end_of_rib_sync_mutex_);
+    std::scoped_lock lock(end_of_rib_sync_mutex_);
     info.end_of_rib_computed = end_of_rib_computed_;
     info.end_of_rib_computed_at = end_of_rib_computed_at_;
     info.end_of_rib_computed_at = UTCUsecToString(end_of_rib_computed_at_);
@@ -298,7 +298,7 @@ void ConfigClientManager::ReinitConfigClient(
 void ConfigClientManager::ReinitConfigClient() {
     {
         // Wake up the amqp task waiting for EOR for config reading
-        tbb::mutex::scoped_lock lock(end_of_rib_sync_mutex_);
+        std::scoped_lock lock(end_of_rib_sync_mutex_);
         cond_var_.notify_all();
     }
     reinit_triggered_ = true;

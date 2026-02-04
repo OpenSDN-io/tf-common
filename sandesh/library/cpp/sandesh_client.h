@@ -18,9 +18,6 @@
 #include <boost/ptr_container/ptr_map.hpp>
 #include <boost/tuple/tuple.hpp>
 
-#include <tbb/mutex.h>
-#include <tbb/atomic.h>
-
 #include <io/tcp_server.h>
 #include <io/ssl_server.h>
 #include <io/ssl_session.h>

@@ -532,7 +532,7 @@ void t_cpp_generator::init_generator() {
 #ifndef SANDESH
     "#include <TApplicationException.h>" << endl <<
 #else
-    "#include <tbb/atomic.h>" << endl <<
+    "#include <atomic>" << endl <<
     "#include <boost/shared_ptr.hpp>" << endl <<
     "#include <sandesh/derived_stats.h>" << endl <<
     "#include <sandesh/derived_stats_algo.h>" << endl <<
@@ -1812,7 +1812,7 @@ void t_cpp_generator::generate_sandesh_seqnum(ofstream& out,
                                               t_sandesh* tsandesh) {
     if (((t_base_type *)tsandesh->get_type())->is_sandesh_uve() ||
         ((t_base_type *)tsandesh->get_type())->is_sandesh_alarm()) {
-      indent(out) << "static tbb::atomic<uint32_t> lseqnum_;" << endl;
+      indent(out) << "static std::atomic<uint32_t> lseqnum_;" << endl;
     } else {
       indent(out) << "static uint32_t lseqnum_;" << endl;
     }
@@ -2384,7 +2384,7 @@ void t_cpp_generator::generate_sandesh_definition(ofstream& out,
         out << indent() << "static boost::circular_buffer<time_t>"
                             " rate_limit_buffer_;" << endl;
 
-        out << indent() << "static tbb::mutex rate_limit_mutex_;" << endl;
+        out << indent() << "static std::mutex rate_limit_mutex_;" << endl;
     }
 
     out << endl;
@@ -3544,7 +3544,7 @@ void t_cpp_generator::generate_sandesh_static_seqnum_def(ofstream& out,
                                                               t_sandesh* tsandesh) {
     if (((t_base_type *)tsandesh->get_type())->is_sandesh_uve() ||
         ((t_base_type *)tsandesh->get_type())->is_sandesh_alarm()) {
-      out << "tbb::atomic<uint32_t> " << tsandesh->get_name() << "::lseqnum_;" << endl;
+      out << "std::atomic<uint32_t> " << tsandesh->get_name() << "::lseqnum_;" << endl;
     } else {
       out << "uint32_t " << tsandesh->get_name() << "::lseqnum_ = 1;" << endl;
     }
@@ -3564,7 +3564,7 @@ void t_cpp_generator::generate_sandesh_static_rate_limit_buffer_def(
 
 void t_cpp_generator::generate_sandesh_static_rate_limit_mutex_def(
                                            ofstream& out,t_sandesh* tsandesh) {
-    out << "tbb::mutex " << tsandesh->get_name() << "::rate_limit_mutex_; "
+    out << "std::mutex " << tsandesh->get_name() << "::rate_limit_mutex_; "
         << endl << endl;
 }
 
@@ -4189,7 +4189,7 @@ void t_cpp_generator::generate_sandesh_uve_creator(
     indent(out) << type_name((*f_iter)->get_type()) <<
         " & cdata = const_cast<" << type_name((*f_iter)->get_type()) <<
         " &>(data);" << endl;
-    indent(out) << "uint32_t msg_seqno = lseqnum_.fetch_and_increment() + 1;" << endl;
+    indent(out) << "uint32_t msg_seqno = lseqnum_.fetch_add(1) + 1;" << endl;
     indent(out) << "if (!table.empty()) cdata.table_ = table;" << endl;
     indent(out) << "if (uvemap" << sname <<
       ".UpdateUVE(cdata, msg_seqno, mono_usec, partition, Xlevel)) {" << endl;
@@ -4221,7 +4221,7 @@ void t_cpp_generator::generate_sandesh_uve_creator(
     indent(out) << type_name((*f_iter)->get_type()) <<
         " & cdata = const_cast<" << type_name((*f_iter)->get_type()) <<
         " &>(data);" << endl;
-    indent(out) << "uint32_t msg_seqno = lseqnum_.fetch_and_increment() + 1;" << endl;
+    indent(out) << "uint32_t msg_seqno = lseqnum_.fetch_add(1) + 1;" << endl;
     indent(out) << "if (!table.empty()) cdata.table_ = table;" << endl;
     indent(out) << "if (uvemap" << sname <<
       ".UpdateUVE(cdata, msg_seqno, mono_usec, partition, SandeshLevel::SYS_NOTICE)) {" << endl;
@@ -4847,7 +4847,7 @@ void t_cpp_generator::generate_isRatelimitPass(ofstream& out,
     out << indent() << "return false;" << endl;
     indent_down();
     out << indent() << "}" << endl;
-    out << indent() << "tbb::mutex::scoped_lock lock(rate_limit_mutex_);" << endl;
+    out << indent() << "std::scoped_lock lock(rate_limit_mutex_);" << endl;
     out << indent() << "if (rate_limit_buffer_.capacity() !="
         " send_rate_limit) {" << endl;
     indent_up();
