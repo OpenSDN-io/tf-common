@@ -5,7 +5,7 @@
 #ifndef SRC_IO_IO_UTILS_H_
 #define SRC_IO_IO_UTILS_H_
 
-#include <tbb/atomic.h>
+#include <atomic>
 
 class SocketIOStats;
 
@@ -17,18 +17,18 @@ struct SocketStats {
     void GetRxStats(SocketIOStats *socket_stats) const;
     void GetTxStats(SocketIOStats *socket_stats) const;
 
-    tbb::atomic<uint64_t> read_calls;
-    tbb::atomic<uint64_t> read_bytes;
-    tbb::atomic<uint64_t> read_errors;
-    tbb::atomic<uint64_t> write_calls;
-    tbb::atomic<uint64_t> write_bytes;
-    tbb::atomic<uint64_t> write_errors;
-    tbb::atomic<uint64_t> write_block_start_time;
-    tbb::atomic<uint64_t> write_blocked;
-    tbb::atomic<uint64_t> write_blocked_duration_usecs;
-    tbb::atomic<uint64_t> read_block_start_time;
-    tbb::atomic<uint64_t> read_blocked;
-    tbb::atomic<uint64_t> read_blocked_duration_usecs;
+    std::atomic<uint64_t> read_calls;
+    std::atomic<uint64_t> read_bytes;
+    std::atomic<uint64_t> read_errors;
+    std::atomic<uint64_t> write_calls;
+    std::atomic<uint64_t> write_bytes;
+    std::atomic<uint64_t> write_errors;
+    std::atomic<uint64_t> write_block_start_time;
+    std::atomic<uint64_t> write_blocked;
+    std::atomic<uint64_t> write_blocked_duration_usecs;
+    std::atomic<uint64_t> read_block_start_time;
+    std::atomic<uint64_t> read_blocked;
+    std::atomic<uint64_t> read_blocked_duration_usecs;
 };
 
 }  // namespace io
