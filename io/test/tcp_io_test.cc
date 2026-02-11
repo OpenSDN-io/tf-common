@@ -9,8 +9,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-#include <boost/bind.hpp>
-#include <tbb/recursive_mutex.h>
+#include <boost/bind/bind.hpp>
 
 #include "testing/gunit.h"
 
@@ -27,6 +26,7 @@
 #include "io/io_log.h"
 
 using namespace std;
+using namespace boost::placeholders;
 
 namespace {
 

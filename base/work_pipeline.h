@@ -61,7 +61,7 @@
 #include <atomic> 
 
 #include <boost/function.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/assign/list_of.hpp>
@@ -69,6 +69,8 @@
 #include <boost/mpl/assert.hpp>
 #include <boost/tuple/tuple.hpp>
 #include "base/task.h"
+
+using namespace boost::placeholders;
 
 // When the WorkPipeline is done, it will call this function back
 // to indicate that the result is ready.

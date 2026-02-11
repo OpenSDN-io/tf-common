@@ -4,7 +4,7 @@
 
 #include "io/udp_server.h"
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include "base/logging.h"
 #include "base/address_util.h"
@@ -16,6 +16,7 @@ using boost::asio::mutable_buffer;
 using boost::asio::mutable_buffers_1;
 using boost::asio::const_buffer;
 using boost::asio::ip::udp;
+using namespace boost::placeholders;
 
 int UdpServer::reader_task_id_ = -1;
 

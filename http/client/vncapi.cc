@@ -2,7 +2,7 @@
  * Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
  */
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/function.hpp>
 #include "base/util.h"
 #include "base/address_util.h"
@@ -22,6 +22,8 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include "vncapi.h"
+
+using namespace boost::placeholders;
 
 RespBlock::RespBlock(HttpConnection *c, std::string uri,
             boost::function<void(contrail_rapidjson::Document&,

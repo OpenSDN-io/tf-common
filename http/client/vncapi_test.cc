@@ -2,7 +2,7 @@
  * Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
  */
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include "base/util.h"
 #include "base/test/task_test_util.h"
 #include <atomic>
@@ -12,6 +12,7 @@
 #include "vncapi.h"
 
 EventManager evm;
+using namespace boost::placeholders;
 
 class Controller {
     public:

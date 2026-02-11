@@ -8,13 +8,14 @@
 #include <base/logging.h>
 #include <base/queue_task.h>
 #include <base/task.h>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <iostream>
 #include <database/etcd/eql_if.h>
 
 using namespace std;
 using etcd::etcdql::EtcdIf;
 using etcd::etcdql::EtcdResponse;
+using namespace boost::placeholders;
 
 class EqlIfTest : public ::testing::Test {
     protected:

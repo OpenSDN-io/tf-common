@@ -41,7 +41,7 @@
 #include <set>
 
 #include <boost/asio/placeholders.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/intrusive_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/function.hpp>
@@ -49,6 +49,8 @@
 #include <boost/system/error_code.hpp>
 
 #include <base/task.h>
+
+using namespace boost::placeholders;
 
 class TimerImpl;
 

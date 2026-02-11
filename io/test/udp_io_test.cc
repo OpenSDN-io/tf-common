@@ -2,7 +2,7 @@
  * Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
  */
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/asio.hpp>
 
 #include "testing/gunit.h"
@@ -12,6 +12,8 @@
 #include "io/udp_server.h"
 #include "io/test/event_manager_test.h"
 #include "io/io_log.h"
+
+using namespace boost::placeholders;
 
 namespace {
 

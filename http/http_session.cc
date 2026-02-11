@@ -5,7 +5,7 @@
 #include "http/http_session.h"
 
 #include <map>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <cstdio>
 
 #include "base/logging.h"
@@ -17,6 +17,7 @@
 #include "http/http_log_types.h"
 
 using namespace std;
+using namespace boost::placeholders;
 
 int HttpSession::req_handler_task_id_ = -1;
 HttpSession::map_type * HttpSession::context_map_ = 0;

@@ -4,9 +4,11 @@
 
 #include "base/lifetime.h"
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include "base/backtrace.h"
 #include "base/time_util.h"
+
+using namespace boost::placeholders;
 
 LifetimeRefBase::LifetimeRefBase(LifetimeActor *actor)
         : ref_(this, actor) {

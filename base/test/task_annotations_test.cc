@@ -5,7 +5,7 @@
 #include "base/task_annotations.h"
 
 #include <boost/assign.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/function.hpp>
 
 #include "base/task.h"
@@ -15,6 +15,7 @@
 
 using namespace boost::assign;
 using namespace std;
+using namespace boost::placeholders;
 
 class ExampleType {
   public:

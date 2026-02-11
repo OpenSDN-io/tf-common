@@ -7,7 +7,7 @@
 #include <string>
 
 #include <boost/asio.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include "io/event_manager.h"
 #include "io/io_log.h"
@@ -29,6 +29,7 @@ using std::size_t;
 using std::srand;
 using std::string;
 using std::time;
+using namespace boost::placeholders;
 
 class SslSession::SslReader : public Task {
 public:

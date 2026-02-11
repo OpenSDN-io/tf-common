@@ -4,13 +4,15 @@
 
 #include <sys/wait.h>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/foreach.hpp>
 #include <boost/range/adaptor/map.hpp>
 
 #include <base/logging.h>
 #include <io/event_manager.h>
 #include <io/process_signal.h>
+
+using namespace boost::placeholders;
 
 namespace process {
 

@@ -14,7 +14,7 @@
 #include <boost/asio/placeholders.hpp>
 #include <boost/assign/std/vector.hpp>
 #include <boost/assign/list_of.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/foreach.hpp>
 #include <boost/program_options.hpp>
 
@@ -34,6 +34,7 @@
 #include "io/io_log.h"
 
 using namespace std;
+using namespace boost::placeholders;
 
 //
 // Number of Server

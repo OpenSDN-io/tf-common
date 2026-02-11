@@ -8,7 +8,7 @@
 // Sandesh server implementation
 //
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/assign.hpp>
 
 #include <base/address_util.h>
@@ -22,6 +22,7 @@
 
 using namespace std;
 using namespace boost::asio;
+using namespace boost::placeholders;
 
 const std::string SandeshServer::kStateMachineTask = "sandesh::SandeshStateMachine";
 const std::string SandeshServer::kLifetimeMgrTask = "sandesh::LifetimeMgr";

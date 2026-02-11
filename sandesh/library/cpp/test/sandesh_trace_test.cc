@@ -10,7 +10,7 @@
 
 #include "testing/gunit.h"
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include <io/event_manager.h>
 #include <base/logging.h>
@@ -22,6 +22,7 @@
 
 using boost::asio::ip::address;
 using boost::asio::ip::tcp;
+using namespace boost::placeholders;
 
 class SandeshTraceTest : public ::testing::Test {
 public:

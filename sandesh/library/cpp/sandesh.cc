@@ -9,7 +9,7 @@
 //
 
 #include <boost/filesystem.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
 #include <boost/algorithm/string/predicate.hpp>
@@ -49,6 +49,7 @@ using boost::asio::ip::address;
 using namespace contrail::sandesh::protocol;
 using namespace contrail::sandesh::transport;
 using namespace log4cplus;
+using namespace boost::placeholders;
 
 // Statics
 Sandesh::SandeshRole::type Sandesh::role_ = SandeshRole::Invalid;

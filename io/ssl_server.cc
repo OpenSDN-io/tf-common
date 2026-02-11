@@ -3,7 +3,7 @@
  */
 
 #include <boost/asio.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include "io/ssl_server.h"
 #include "io/ssl_session.h"
@@ -11,6 +11,8 @@
 #include "io/event_manager.h"
 #include "io/io_utils.h"
 #include "io/io_log.h"
+
+using namespace boost::placeholders;
 
 SslServer::SslServer(EventManager *evm, boost::asio::ssl::context::method m,
                      bool ssl_enabled, bool ssl_handshake_delayed)

@@ -4,9 +4,10 @@
 
 #include "base/proto.h"
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 using namespace std;
+using namespace boost::placeholders;
 
 namespace detail {
     bool debug_ = false;

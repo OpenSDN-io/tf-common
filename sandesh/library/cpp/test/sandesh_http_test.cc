@@ -9,7 +9,7 @@
 //
 
 #include "testing/gunit.h"
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <string>
 #include <vector>
 #include <iostream>
@@ -38,6 +38,7 @@ extern "C" {
 using namespace std;
 using namespace boost::asio::ip;
 using namespace boost::uuids;
+using namespace boost::placeholders;
 
 int currentTestId;
 int currentParam;

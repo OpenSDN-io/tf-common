@@ -23,8 +23,10 @@
 #include "http_curl.h"
 #include <curl/curl.h>
 #include <boost/asio.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/intrusive_ptr.hpp>
+
+using namespace boost::placeholders;
 
 #define MSG_OUT stdout /* Send info to stdout, change to stderr if you want */
 

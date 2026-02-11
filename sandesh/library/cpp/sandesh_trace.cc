@@ -8,7 +8,7 @@
 // Sandesh Trace Request Implementation
 //
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <ctime>
 #include <base/trace.h>
 #include <sandesh/sandesh_types.h>
@@ -18,6 +18,7 @@
 
 using std::string;
 using std::vector;
+using namespace boost::placeholders;
 
 int PullSandeshTraceReq = 0;
 

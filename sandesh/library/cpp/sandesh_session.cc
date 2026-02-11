@@ -8,7 +8,7 @@
 // Sandesh session
 //
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/assign.hpp>
 #include <boost/algorithm/string.hpp>
 
@@ -29,6 +29,7 @@
 using namespace std;
 using namespace contrail::sandesh::protocol;
 using namespace contrail::sandesh::transport;
+using namespace boost::placeholders;
 
 using boost::asio::mutable_buffer;
 using boost::asio::buffer_cast;

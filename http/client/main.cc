@@ -3,11 +3,13 @@
  */
 
 #include "http_client.h"
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include "http_curl.h"
 #include "base/util.h"
 #include "base/test/task_test_util.h"
 #include "io/event_manager.h"
+
+using namespace boost::placeholders;
 
 EventManager evm;
 int num;

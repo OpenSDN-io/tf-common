@@ -5,7 +5,7 @@
 #include "base/test/task_test_util.h"
 
 #include <boost/asio/deadline_timer.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include "base/task.h"
@@ -14,6 +14,7 @@
 #include "testing/gunit.h"
 
 using namespace boost::posix_time;
+using namespace boost::placeholders;
 
 namespace task_util {
 

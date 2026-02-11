@@ -10,7 +10,7 @@
 
 #include <boost/tuple/tuple.hpp>
 #include <boost/asio/ip/tcp.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/assign/list_of.hpp>
 #include <boost/scoped_ptr.hpp>
 
@@ -21,6 +21,8 @@
 #include <base/sandesh/cpuinfo_types.h>
 #include <base/sandesh/nodeinfo_constants.h>
 #include <base/sandesh/nodeinfo_types.h>
+
+using namespace boost::placeholders;
 
 class ConnectionInfoTest;
 

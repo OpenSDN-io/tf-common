@@ -11,7 +11,7 @@
 #include "testing/gunit.h"
 
 #include <vector>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include <io/event_manager.h>
 #include <base/logging.h>
@@ -23,6 +23,7 @@
 #include <sandesh/sandesh_session.h>
 
 using namespace std;
+using namespace boost::placeholders;
 
 using boost::asio::mutable_buffer;
 using boost::asio::buffer_cast;

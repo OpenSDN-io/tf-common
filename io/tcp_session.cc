@@ -9,7 +9,7 @@
 
 #include <boost/asio.hpp>
 #include <boost/asio/detail/socket_option.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/scoped_array.hpp>
 #include <boost/asio/detail/recycling_allocator.hpp>
 
@@ -38,6 +38,7 @@ using boost::system::error_code;
 using std::min;
 using std::ostringstream;
 using std::string;
+using namespace boost::placeholders;
 
 using boost::asio::error::try_again;
 using boost::asio::error::would_block;

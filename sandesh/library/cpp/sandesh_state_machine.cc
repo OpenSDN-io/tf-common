@@ -9,7 +9,7 @@
 //
 
 #include <typeinfo>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/statechart/custom_reaction.hpp>
 #include <boost/statechart/event.hpp>
@@ -37,6 +37,7 @@
 
 using namespace std;
 using boost::system::error_code;
+using namespace boost::placeholders;
 
 namespace mpl = boost::mpl;
 namespace sc = boost::statechart;

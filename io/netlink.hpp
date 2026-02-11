@@ -11,7 +11,7 @@
 #include <iostream>
 
 #include <boost/asio.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/asio/netlink_protocol.hpp>
 
 class EventManager;

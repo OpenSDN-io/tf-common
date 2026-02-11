@@ -10,7 +10,7 @@
 
 #include "testing/gunit.h"
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/pool/singleton_pool.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/algorithm/string/split.hpp>
@@ -32,6 +32,7 @@
 
 using contrail::regex;
 using contrail::regex_replace;
+using namespace boost::placeholders;
 
 // Verfiy the performance of WorkQueue enqueue and dequeue for the following cases:
 // 1. Allocating new Sandesh

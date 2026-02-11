@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2017 Juniper Networks, Inc. All rights reserved.
  */
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include "logging.h"
 #include "io/event_manager.h"
 #include "timer_impl.h"
@@ -9,6 +9,8 @@
 #include "task.h"
 #include "task_monitor.h"
 #include "task_tbbkeepawake.h"
+
+using namespace boost::placeholders;
 
 #define kPollIntervalMultiplier 2
 #define kInactivityMultiplier 50

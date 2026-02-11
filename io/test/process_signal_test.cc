@@ -8,13 +8,14 @@
 #include <boost/scoped_ptr.hpp>
 #include <boost/system/error_code.hpp>
 #include <boost/assign/list_of.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include <base/logging.h>
 #include <io/process_signal.h>
 #include <io/event_manager.h>
 
 using namespace process;
+using namespace boost::placeholders;
 
 class SignalMock : public Signal {
  public:

@@ -13,7 +13,7 @@
 
 #include <boost/asio/deadline_timer.hpp>
 #include <boost/asio/placeholders.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include "testing/gunit.h"
 
@@ -27,6 +27,7 @@
 #include "io/io_log.h"
 
 using namespace std;
+using namespace boost::placeholders;
 
 namespace {
 

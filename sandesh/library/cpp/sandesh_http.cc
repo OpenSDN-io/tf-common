@@ -18,7 +18,7 @@
 
 #include "io/event_manager.h"
 #include "http/http_server.h"
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/tokenizer.hpp>
 
 #include <sandesh/sandesh_types.h>
@@ -54,6 +54,7 @@ static int kEncodeBufferSize = 4096;
 
 using namespace contrail::sandesh::protocol;
 using namespace std;
+using namespace boost::placeholders;
 
 using contrail::sandesh::transport::TMemoryBuffer;
 

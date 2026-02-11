@@ -8,7 +8,7 @@
 // Sandesh Client
 //
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/assign.hpp>
 #include <boost/foreach.hpp>
 
@@ -43,6 +43,7 @@ using std::string;
 using std::map;
 using std::make_pair;
 using std::vector;
+using namespace boost::placeholders;
 
 const std::string SandeshClient::kSMTask = "sandesh::SandeshClientSM";
 const std::string SandeshClient::kSessionWriterTask = "sandesh::SandeshClientSession";

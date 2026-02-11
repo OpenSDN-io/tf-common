@@ -12,12 +12,14 @@
 #include "http/http_message_test_types.h"
 #include "http/route_test_types.h"
 #include "config/uve/virtual_network_types.h"
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/foreach.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/assign/list_of.hpp>
+
 using namespace boost::assign;
 using namespace std;
+using namespace boost::placeholders;
 
 class ServerInfo {
 public:

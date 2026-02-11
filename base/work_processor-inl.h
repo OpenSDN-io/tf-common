@@ -7,7 +7,7 @@
 
 #include <vector>
 #include <boost/function.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/assign/list_of.hpp>
@@ -17,6 +17,8 @@
 #include <limits>
 #include <sstream>
 #include "base/task.h"
+
+using namespace boost::placeholders;
 
 struct PipelineWorker : public Task {
     PipelineWorker(int tid, int tinst, boost::function<bool(void)> runner) :

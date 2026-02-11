@@ -2,8 +2,10 @@
 
 #include "base/task.h"
 #include "base/timer.h"
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include "io/event_manager.h"
+
+using namespace boost::placeholders;
 
 class TaskTbbKeepAwake {
 public:

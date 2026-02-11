@@ -10,7 +10,7 @@
 
 #include "testing/gunit.h"
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/assign/list_of.hpp>
 
 #include "base/logging.h"
@@ -45,6 +45,7 @@ using namespace contrail::sandesh::transport;
 using boost::asio::ip::address;
 using boost::asio::ip::tcp;
 using namespace contrail::sandesh::test;
+using namespace boost::placeholders;
 
 bool asyncserver_done = false;
 bool requestserver_done = false;

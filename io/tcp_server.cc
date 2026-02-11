@@ -8,7 +8,7 @@
 
 #include <boost/asio/connect.hpp>
 #include <boost/asio/placeholders.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <netinet/tcp.h>
 
 #include "base/logging.h"
@@ -23,6 +23,7 @@ using boost::asio::placeholders::error;
 using boost::asio::socket_base;
 using boost::bind;
 using boost::system::error_code;
+using namespace boost::placeholders;
 
 using boost::asio::socket_base;
 using std::ostringstream;

@@ -14,7 +14,7 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/find_iterator.hpp>
 #include <boost/range/iterator_range.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include "testing/gunit.h"
 
@@ -32,6 +32,7 @@
 
 using namespace contrail::sandesh::protocol;
 using namespace contrail::sandesh::transport;
+using namespace boost::placeholders;
 
 static const int32_t test_i32 = 0xdeadbeef;
 static const uint32_t test_list_size = 5;

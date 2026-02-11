@@ -7,11 +7,13 @@
 
 #include <list>
 #include <boost/asio.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/asio/buffer.hpp>
 #include <boost/intrusive_ptr.hpp>
 #include <boost/system/error_code.hpp>
 #include "base/util.h"
+
+using namespace boost::placeholders;
 
 class TcpSession;
 

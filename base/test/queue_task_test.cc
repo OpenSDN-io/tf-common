@@ -8,11 +8,13 @@
 #include <queue>
 
 #include "testing/gunit.h"
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/assign/list_of.hpp>
 #include "base/logging.h"
 #include "base/queue_task.h"
 #include "base/test/task_test_util.h"
+
+using namespace boost::placeholders;
 
 class EnqueueTask : public Task {
 public:

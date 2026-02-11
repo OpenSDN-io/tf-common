@@ -3,7 +3,7 @@
  */
 
 #include "http_client.h"
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/algorithm/string.hpp>
 #include "base/address_util.h"
 #include "base/task_annotations.h"
@@ -12,6 +12,7 @@
 #include "http_curl.h"
 
 using namespace std;
+using namespace boost::placeholders;
 
 HttpClientSession::HttpClientSession(HttpClient *client, Socket *socket) 
     : TcpSession(client, socket) , delete_called_(0) {

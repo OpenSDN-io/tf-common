@@ -7,11 +7,13 @@
 //
 
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/assign.hpp>
 #include <sandesh/transport/TBufferTransports.h>
 #include <sandesh/protocol/TJSONProtocol.h>
 #include <stats_client.h>
+
+using namespace boost::placeholders;
 
 #if defined(BOOST_ASIO_HAS_LOCAL_SOCKETS)
 void StatsClientLocal::Initialize() {
