@@ -9,9 +9,9 @@
 #include <atomic>
 #include <boost/intrusive/set.hpp>
 #include <boost/optional.hpp>
+#include <oneapi/tbb/enumerable_thread_specific.h>
+#include <oneapi/tbb/global_control.h>
 
-#include "tbb/task.h"
-#include "tbb/enumerable_thread_specific.h"
 #include "base/logging.h"
 #include "base/task.h"
 #include "base/task_annotations.h"
@@ -21,13 +21,12 @@
 #include <base/sandesh/task_types.h>
 
 using namespace std;
-using tbb::task;
 
 int TaskScheduler::ThreadAmpFactor_ = 1;
 class TaskEntry;
 struct TaskDeferEntryCmp;
 
-typedef tbb::enumerable_thread_specific<Task *> TaskInfo;
+typedef oneapi::tbb::enumerable_thread_specific<Task *> TaskInfo;
 
 static TaskInfo task_running;
 
@@ -44,25 +43,37 @@ boost::scoped_ptr<TaskScheduler> TaskScheduler::singleton_;
 /// @brief A private class used to implement tbb::task
 /// An object is created when task is ready for execution and
 /// registered with tbb::task
-class TaskImpl : public tbb::task {
+class TaskFunctor {
 public:
-    TaskImpl(Task *t) : parent_(t) {};
+
+    /// @brief Creates a new instance of TaskFunctor using the provided
+    /// implementaton (a parent).
+    TaskFunctor(Task *t) : parent_(t) {};
+
+    /// @brief Creates a copy of the object.
+    TaskFunctor(const TaskFunctor& tf)
+	: parent_(tf.parent_) {}
+
+    TaskFunctor(TaskFunctor &&tf)
+        : parent_(tf.parent_) {}
  
     /// @brief Destructor is called when a task execution is compeleted.
     /// Invoked implicitly by tbb::task.
-    /// Invokes OnTaskExit to schedule tasks pending tasks
-    virtual ~TaskImpl();
+    /// Invokes OnTaskExit to schedule tasks pending tasks.
+    virtual ~TaskFunctor();
+
+    /// @brief Method called from TBB to execute the task.
+    /// Invokes Run() method of the parent (an implementation).
+    /// Supports task continuation when Run() returns false.
+    void operator ()() const;
 
 private:
 
-    /// @brief Method called from tbb::task to execute.
-    /// Invoke Run() method of client.
-    /// Supports task continuation when Run() returns false
-    tbb::task *execute();
+    /// @brief
+    mutable Task    *parent_;
 
-    Task    *parent_;
-
-    DISALLOW_COPY_AND_ASSIGN(TaskImpl);
+    /// @brief
+    const TaskFunctor & operator = (const TaskFunctor) = delete;
 };
 
 /// @brief A class maintaning information for every <task, instance>
@@ -297,6 +308,10 @@ public:
         return count;
     }
 
+    oneapi::tbb::task_group &tbb_group() {
+	return tbb_group_;
+    }
+
 private:
     friend class TaskEntry;
     friend class TaskScheduler;
@@ -315,6 +330,9 @@ private:
 
     static const int        kVectorGrowSize = 16;
     int                     task_code_id_;
+
+    /// @brief A TBB object to store executing tasks.
+    oneapi::tbb::task_group tbb_group_;
 
     /// @brief Specifies if policy is already set
     bool                    policy_set_;
@@ -349,7 +367,7 @@ private:
 // Implementation for class TaskImpl
 ////////////////////////////////////////////////////////////////////////////
 
-tbb::task *TaskImpl::execute() {
+void TaskFunctor::operator ()() const {
     TaskInfo::reference running = task_running.local();
     running = parent_;
     parent_->tbb_state(Task::TBB_EXEC);
@@ -367,6 +385,7 @@ tbb::task *TaskImpl::execute() {
             t = ClockMonotonicUsec();
         }
         bool is_complete = parent_->Run();
+        TaskScheduler *scheduler = TaskScheduler::GetInstance();
         if (t != 0) {
             int64_t delay = ClockMonotonicUsec() - t;
             TaskScheduler *scheduler = TaskScheduler::GetInstance();
@@ -386,6 +405,7 @@ tbb::task *TaskImpl::execute() {
         } else {
             parent_->set_task_recycle();
         }
+        scheduler->OnTaskExit(parent_);
     } catch (std::exception &e) {
 
         // Store exception information statically, to easily read exception
@@ -400,15 +420,9 @@ tbb::task *TaskImpl::execute() {
             << " TaskImpl: " << this);
         assert(0);
     }
-
-    return NULL;
 }
 
-TaskImpl::~TaskImpl() {
-    assert(parent_ != NULL);
-
-    TaskScheduler *sched = TaskScheduler::GetInstance();
-    sched->OnTaskExit(parent_);
+TaskFunctor::~TaskFunctor() {
 }
 
 int TaskScheduler::GetThreadCount(int thread_count) {
@@ -421,10 +435,11 @@ int TaskScheduler::GetThreadCount(int thread_count) {
 
     char *num_cores_str = getenv("TBB_THREAD_COUNT");
     if (!num_cores_str) {
-        if (thread_count == 0)
-            num_cores_ = tbb::task_scheduler_init::default_num_threads();
-        else
+        if (thread_count == 0) {
+            num_cores_ = oneapi::tbb::info::default_concurrency();
+	} else {
             num_cores_ = thread_count;
+        }
     } else {
         num_cores_ = strtol(num_cores_str, NULL, 0);
     }
@@ -434,7 +449,7 @@ int TaskScheduler::GetThreadCount(int thread_count) {
 }
 
 int TaskScheduler::GetDefaultThreadCount() {
-    return tbb::task_scheduler_init::default_num_threads();
+    return oneapi::tbb::this_task_arena::max_concurrency();
 }
 
 bool TaskScheduler::ShouldUseSpawn() {
@@ -449,7 +464,11 @@ bool TaskScheduler::ShouldUseSpawn() {
 ////////////////////////////////////////////////////////////////////////////
 
 TaskScheduler::TaskScheduler(int task_count) :
-    use_spawn_(ShouldUseSpawn()), task_scheduler_(GetThreadCount(task_count) + 1),
+    use_spawn_(ShouldUseSpawn()),
+    tbb_global_control_(
+	oneapi::tbb::global_control::max_allowed_parallelism,
+        GetThreadCount(task_count) + 1),
+    task_scheduler_(GetThreadCount(task_count) + 1),
     running_(true), seqno_(0), id_max_(0), log_fn_(), track_run_time_(false),
     measure_delay_(false), schedule_delay_(0), execute_delay_(0),
     enqueue_count_(0), done_count_(0), cancel_count_(0), evm_(NULL),
@@ -661,6 +680,7 @@ void TaskScheduler::EnqueueUnLocked(Task *t) {
     entry->stats_.enqueue_count_++;
     // If either TaskGroup or TaskEntry is disabled for Unit-Test purposes,
     // enqueue new task in waitq and update TaskGroup if needed.
+
     if (group->IsDisabled() || entry->IsDisabled()) {
         entry->AddToWaitQ(t);
         if (group->IsDisabled()) {
@@ -697,7 +717,9 @@ void TaskScheduler::EnqueueUnLocked(Task *t) {
         return;
     }
 
+
     entry->RunTask(t);
+
     return;
 }
 
@@ -787,7 +809,7 @@ void TaskScheduler::OnTaskExit(Task *t) {
     }
 
     // Task is being recycled, reset the state, seq_no and TBB task handle
-    t->task_impl_ = NULL;
+    t->task_impl_ = oneapi::tbb::task_handle{};
     t->seqno(0);
     t->state(Task::INIT);
     t->tbb_state(Task::TBB_INIT);
@@ -925,61 +947,6 @@ TaskStats *TaskScheduler::GetTaskStats(int task_id, int instance_id) {
     return group->GetTaskStats(instance_id);
 }
 
-int TaskScheduler::CountThreadsPerPid(pid_t pid) {
-    int threads;
-    threads = 0;
-
-#if defined(__linux__)
-    std::ostringstream file_name;
-    std::string line;
-
-    file_name << "/proc/" << pid << "/status";
-
-    std::ifstream file(file_name.str().c_str());
-
-    if(!file) {
-        LOG(ERROR, "opening /proc failed");
-        return -1;
-    }
-
-    while (threads == 0 && file.good()) {
-        getline(file, line);
-        if (line == "Threads:\t1") threads = 1;
-    }
-    file.close();
-#else
-#error "TaskScheduler::CountThreadsPerPid() - unsupported platform."
-#endif
-
-    return threads;
-}
-
-void TaskScheduler::WaitForTerminateCompletion() {
-    //
-    // Wait for a bit to give a chance for all the threads to exit
-    //
-    usleep(1000);
-
-    int count = 0;
-    int threadsRunning;
-    pid_t pid = getpid();
-
-    while (count++ < 12000) {
-        threadsRunning = CountThreadsPerPid(pid);
-
-        if (threadsRunning == 1)
-            break;
-
-        if (threadsRunning == -1) {
-            LOG(ERROR, "could not check if any thread is running");
-            usleep(10000);
-            break;
-        }
-
-        usleep(10000);
-    }
-}
-
 void TaskScheduler::Terminate() {
     if (task_monitor_) {
         task_monitor_->Terminate();
@@ -999,7 +966,9 @@ void TaskScheduler::Terminate() {
     }
     evm_ = NULL;
     singleton_->task_scheduler_.terminate();
-    WaitForTerminateCompletion();
+    oneapi::tbb::task_scheduler_handle handle =
+	oneapi::tbb::task_scheduler_handle{oneapi::tbb::attach{}};
+    oneapi::tbb::finalize(handle);
     singleton_.reset(NULL);
 }
 
@@ -1058,8 +1027,9 @@ void TaskScheduler::EnableTaskEntry(int task_id, int instance_id) {
 // Implementation for class TaskGroup
 ////////////////////////////////////////////////////////////////////////////
 
-TaskGroup::TaskGroup(int task_id) : task_code_id_(task_id), policy_set_(false),
-    run_count_(0), execute_delay_(0), schedule_delay_(0), disable_(false) {
+TaskGroup::TaskGroup(int task_id) : task_code_id_(task_id), tbb_group_(),
+    policy_set_(false), run_count_(0), execute_delay_(0), schedule_delay_(0),
+    disable_(false) {
     total_run_time_ = 0;
     task_entry_db_.resize(TaskGroup::kVectorGrowSize);
     task_entry_ = new TaskEntry(task_id);
@@ -1368,7 +1338,7 @@ void TaskEntry::RunTask(Task *t) {
     TaskGroup *group = scheduler->QueryTaskGroup(t->task_code_id());
     group->TaskStarted();
 
-    t->StartTask(scheduler);
+    t->StartTask(scheduler, group);
 }
 
 void TaskEntry::RunWaitQ() {
@@ -1532,19 +1502,19 @@ boost::optional<uint64_t> TaskEntry::GetTaskDeferEntrySeqno() const {
 // Implementation for class Task
 ////////////////////////////////////////////////////////////////////////////
 Task::Task(int task_id, int task_instance) : task_code_id_(task_id),
-    task_data_id_(task_instance), task_impl_(NULL), state_(INIT),
+    task_data_id_(task_instance), task_impl_(), state_(INIT),
     tbb_state_(TBB_INIT), seqno_(0), task_recycle_(false), task_cancel_(false),
     enqueue_time_(0), schedule_time_(0), execute_delay_(0), schedule_delay_(0) {
 }
 
 Task::Task(int task_id) : task_code_id_(task_id),
-    task_data_id_(-1), task_impl_(NULL), state_(INIT), tbb_state_(TBB_INIT),
+    task_data_id_(-1), task_impl_(), state_(INIT), tbb_state_(TBB_INIT),
     seqno_(0), task_recycle_(false), task_cancel_(false), enqueue_time_(0),
     schedule_time_(0), execute_delay_(0), schedule_delay_(0) {
 }
 
 
-void Task::StartTask(TaskScheduler *scheduler) {
+void Task::StartTask(TaskScheduler *scheduler, TaskGroup *group) {
     if (enqueue_time_ != 0) {
         schedule_time_ = ClockMonotonicUsec();
         if ((schedule_time_ - enqueue_time_) >
@@ -1553,15 +1523,10 @@ void Task::StartTask(TaskScheduler *scheduler) {
                        (schedule_time_ - enqueue_time_));
         }
     }
-    assert(task_impl_ == NULL);
     state(RUN);
     tbb_state(TBB_ENQUEUED);
-    task_impl_ = new (task::allocate_root())TaskImpl(this);
-    if (scheduler->use_spawn()) {
-        task::spawn(*task_impl_);
-    } else {
-        task::enqueue(*task_impl_);
-    }
+    task_impl_ = group->tbb_group().defer(TaskFunctor(this));
+    scheduler->tbb_arena().enqueue(std::move(task_impl_));
 }
 
 Task *Task::Running() {

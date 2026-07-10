@@ -6,6 +6,7 @@
 #define __EVENT_MANAGER_TEST_H__
 
 #include <atomic>
+#include <memory>
 
 #include "io/event_manager.h"
 
@@ -18,11 +19,12 @@
 class ServerThread {
 public:
     explicit ServerThread(EventManager *evm)
-    : evm_(evm), tbb_scheduler_(NULL) {
+    : evm_(evm), tbb_scheduler_(nullptr) {
     }
     void Run() {
         tbb_scheduler_.reset(
-            new tbb::task_scheduler_init(TaskScheduler::GetThreadCount() + 1));
+            std::make_unique<oneapi::tbb::task_arena>(
+                (TaskScheduler::GetThreadCount() + 1)).release());
         running_ = true;
         evm_->Run();
         running_ = false;
@@ -36,7 +38,8 @@ public:
     }
 
     void Start() {
-        thread_.reset(new boost::thread(&ServerThread::Run, this));
+        thread_.reset(std::make_unique<boost::thread>(
+            &ServerThread::Run, this).release());
     }
 
     void Join() {
@@ -44,11 +47,12 @@ public:
     }
 
 private:
-    boost::scoped_ptr<boost::thread> thread_;
+    std::unique_ptr<boost::thread> thread_;
     std::atomic<bool> running_;
     EventManager *evm_;
-    boost::scoped_ptr<tbb::task_scheduler_init> tbb_scheduler_;
+    std::unique_ptr<oneapi::tbb::task_arena> tbb_scheduler_;
 };
+
 
 
 #endif

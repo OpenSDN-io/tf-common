@@ -11,10 +11,12 @@
 #include <shared_mutex>
 #include <vector>
 #include <mutex>
-// TODO: change deprecated tbb::task to something else
 #define TBB_SUPPRESS_DEPRECATED_MESSAGES 1
-#include <tbb/task.h>
-#include <tbb/task_scheduler_init.h>
+#include <oneapi/tbb/task.h>
+#include <oneapi/tbb/task_arena.h>
+#include <oneapi/tbb/task_group.h>
+#include <oneapi/tbb/global_control.h>
+
 #include "base/util.h"
 
 class TaskGroup;
@@ -174,7 +176,7 @@ private:
     friend class TaskScheduler;
 
     /// @brief Gives access to private members for TaskImpl class.
-    friend class TaskImpl;
+    friend class TaskFunctor;
 
     /// @brief Sets sequence number of the task
     void seqno(uint64_t seqno) {seqno_ = seqno;};
@@ -192,7 +194,7 @@ private:
     void set_task_complete() { task_recycle_ = false; };
 
     /// @brief Starts execution of a task.
-    void StartTask(TaskScheduler *scheduler);
+    void StartTask(TaskScheduler *scheduler, TaskGroup *group);
 
     /// @brief The code path executed by the task.
     int                 task_code_id_;
@@ -200,9 +202,9 @@ private:
     /// @brief The dataset id within a code path.
     int                 task_data_id_;
 
-    /// @brief A pointer to an Intel TBB object storing
-    /// low-level information to manage the task.
-    tbb::task           *task_impl_;
+    /// @brief A handle to a oneTBB object storing
+    /// low-level information about the managed task.
+    oneapi::tbb::task_handle   task_impl_;
 
     /// @brief Stores a state of the task.
     State               state_;
@@ -453,6 +455,11 @@ public:
     /// TBB
     static void SetThreadAmpFactor(int n);
 
+    /// @brief returns current TBB arena.
+    oneapi::tbb::task_arena &tbb_arena() {
+	return task_scheduler_;
+    }
+
 private:
     friend class ConcurrencyScope;
     typedef std::vector<TaskGroup *> TaskGroupDb;
@@ -471,24 +478,13 @@ private:
     /// This function modifies the running task as specified by the input
     void SetRunningTask(Task *);
     void ClearRunningTask();
-    void WaitForTerminateCompletion();
-
-    /// @brief Platfrom-dependent subroutine in Linux and FreeBSD
-    /// implementations, used only in 
-    /// TaskScheduler::WaitForTerminateCompletion().
-    /// In Linux, make sure that all the [tbb] threads launched have completely
-    /// exited. We do so by looking for the Threads count of this process in
-    /// /proc/<pid>/status.
-    ///
-    /// In FreeBSD use libprocstat to check how many threads is running
-    /// in specific process.
-    int CountThreadsPerPid(pid_t pid);
 
     /// @brief Use spawn() to run a tbb::task instead of enqueue()
     bool                    use_spawn_;
     TaskEntry               *stop_entry_;
 
-    tbb::task_scheduler_init task_scheduler_;
+    oneapi::tbb::global_control tbb_global_control_;
+    oneapi::tbb::task_arena task_scheduler_;
     mutable std::mutex      mutex_;
     bool                    running_;
     uint64_t                seqno_;
