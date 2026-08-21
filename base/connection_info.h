@@ -6,6 +6,7 @@
 #define __CONNECTION_INFO_H__
 
 #include <map>
+#include <mutex>
 #include <vector>
 
 #include <boost/tuple/tuple.hpp>
@@ -130,6 +131,7 @@ private:
         if (status_cb_.empty()) {
             return false;
         }
+        std::scoped_lock uve_lock(uve_mutex_);
         // Update
         // Add connection_info
         process_status_.set_connection_infos(lock ?
@@ -155,6 +157,7 @@ private:
     static boost::scoped_ptr<ConnectionStateManager> instance_;
 
     ProcessStateFn status_cb_;
+    mutable std::mutex uve_mutex_;
     ProcessStatus process_status_;
     NodeStatus data_;
 };
