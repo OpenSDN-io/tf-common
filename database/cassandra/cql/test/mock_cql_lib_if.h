@@ -1,5 +1,6 @@
 //
 // Copyright (c) 2016 Juniper Networks, Inc. All rights reserved.
+// Copyright Contributors to the OpenSDN project
 //
 
 #ifndef DATABASE_CASSANDRA_CQL_TEST_MOCK_CQL_LIB_IF_H_

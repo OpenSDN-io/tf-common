@@ -1,5 +1,6 @@
 //
 // Copyright (c) 2016 Juniper Networks, Inc. All rights reserved.
+// Copyright Contributors to the OpenSDN project
 //
 
 #ifndef ZOOKEEPER_ZOOKEEPER_INTERFACE_H_

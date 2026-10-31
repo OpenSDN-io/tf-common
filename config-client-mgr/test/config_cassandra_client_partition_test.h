@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2019 Juniper Networks, Inc. All rights reserved.
+ * Copyright Contributors to the OpenSDN project
  */
 #ifndef config_cassandra_client_partition_test_h
 #define config_cassandra_client_partition_test_h

@@ -1,5 +1,6 @@
 //
 // Copyright (c) 2015 Juniper Networks, Inc. All rights reserved.
+// Copyright Contributors to the OpenSDN project
 //
 
 #ifndef SANDESH_LIBRARY_CPP_TEST_SANDESH_TEST_COMMON_H_

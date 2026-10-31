@@ -1,5 +1,6 @@
 /*
  * Copyright 2019, Juniper Networks Inc.
+ * Copyright Contributors to the OpenSDN project
  */
 
 #ifndef _THRIFT_FILE_TRANSPORT_H

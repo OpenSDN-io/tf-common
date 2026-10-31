@@ -18,6 +18,9 @@
  *
  * Copyright 2006-2017 The Apache Software Foundation.
  * https://github.com/apache/thrift
+ *
+ * Modifications Copyright (c) Juniper Networks, Inc.
+ * Copyright Contributors to the OpenSDN project
  */
 
 #ifndef _THRIFT_PROTOCOL_H

@@ -19,6 +19,9 @@
  * Contains some contributions under the Thrift Software License.
  * Please see doc/old-thrift-license.txt in the Thrift distribution for
  * details.
+ *
+ * Modifications Copyright (c) Juniper Networks, Inc.
+ * Copyright Contributors to the OpenSDN project
  */
 
 #include <cassert>
